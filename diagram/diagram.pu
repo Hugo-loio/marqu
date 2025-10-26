@@ -1,0 +1,35 @@
+@startuml
+
+!theme mytheme
+
+skinparam dpi 600
+
+package "<color:ccc>MarQu</color>" {
+
+
+  abstract class BaseParticleSimulator{
+  + virtual void initialize() = 0
+  # virtual double eventRate(int configuration) = 0
+  # virtual double totalRate() = 0
+}
+
+class VectorParticleSimulator {
+  # virtual void markovStep(int index) = 0;
+}
+
+class ListParticleSimulator {
+  # virtual void markovStep(std::list<int>::iterator) = 0;
+}
+
+BaseParticleSimulator <|-- VectorParticleSimulator
+BaseParticleSimulator <|-- ListParticleSimulator
+
+
+'legend center
+'  | Color | Type |
+'  |<#$BOXBG>| Done |
+'  |<#yellow>| TODO |
+'endlegend
+}
+
+@enduml
