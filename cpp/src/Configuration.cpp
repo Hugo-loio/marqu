@@ -39,6 +39,10 @@ marqu::Sign marqu::toSign(char sign){
   }
 }
 
+int marqu::toInt(Sign sign, Axis axis){
+  return static_cast<int>(sign) + 2*static_cast<int>(axis);
+}
+
 int marqu::leviCivita(Axis a1, Axis a2, Axis a3){
   if(a1 == a2 || a2 == a3 || a3 == a1) return 0;
   if( (a1 == Axis::x && a2 == Axis::y && a3 == Axis::z) ||
@@ -49,28 +53,24 @@ int marqu::leviCivita(Axis a1, Axis a2, Axis a3){
   return -1;
 }
 
-marqu::Configuration::Configuration(int configuration, int N){
-  this->N = N;
-  orientations = new std::pair<Sign, Axis>[N];
+marqu::Configuration::Configuration(int configuration, int N) : 
+  N(N), orientations(new std::pair<Sign, Axis>[N]) {
   set(configuration);
 }
 
-marqu::Configuration::Configuration(std::pair<Sign, Axis> * orientations, int N){
-  this->N = N;
-  this->orientations = new std::pair<Sign, Axis>[N];
+marqu::Configuration::Configuration(std::pair<Sign, Axis> * orientations, int N) :
+  N(N), orientations(new std::pair<Sign, Axis>[N]) {
   set(orientations);
 }
 
-marqu::Configuration::Configuration(const std::string & orientations){
-  N = orientations.size()/2;
-  this->orientations = new std::pair<Sign, Axis>[N];
+marqu::Configuration::Configuration(const std::string & orientations) : 
+  N(orientations.size()/2), orientations(new std::pair<Sign, Axis>[N]) {
   set(orientations);
 }
 
-marqu::Configuration::Configuration(const Configuration & other){
-  N = other.N;
-  configuration = other.configuration;
-  orientations = new std::pair<Sign, Axis>[N];
+marqu::Configuration::Configuration(const Configuration & other) :
+  N(other.N), configuration(other.configuration), 
+  orientations(new std::pair<Sign, Axis>[N]){
   for (int i = 0; i < N; ++i) {
     orientations[i] = other.orientations[i];
   }
@@ -125,7 +125,7 @@ void marqu::Configuration::set(const std::string & orientations){
   updateConfiguration();
 }
 
-void marqu::Configuration::set(std::pair<Sign, Axis> * orientations){
+void marqu::Configuration::set(const std::pair<Sign, Axis> * orientations){
   for(int i = 0; i < N; ++i){
     this->orientations[i].first = orientations[i].first;
     this->orientations[i].second = orientations[i].second;
@@ -156,7 +156,8 @@ void marqu::Configuration::updateConfiguration(){
   configuration = 0;
   int multiplier = 1;
   for(int i = 0; i < N; ++i){
-    configuration += multiplier*(static_cast<bool>(orientations[i].first) + 2*static_cast<uint8_t>(orientations[i].second));
+    configuration += multiplier * 
+      toInt(orientations[i].first, orientations[i].second);
     multiplier *= 6;
   }
 }

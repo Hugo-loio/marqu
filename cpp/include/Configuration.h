@@ -14,6 +14,7 @@ namespace marqu{
   char toChar(Axis axis);
   Sign toSign(char sign);
   char toChar(Sign sign);
+  int toInt(Sign sign, Axis axis);
 
   int leviCivita(Axis, Axis, Axis);
 
@@ -45,7 +46,7 @@ namespace marqu{
       ~Configuration();
 
       void set(const std::string & orientations);
-      void set(std::pair<Sign, Axis> * orientations); 
+      void set(const std::pair<Sign, Axis> * orientations); 
       void set(int configuration);
 
       Sign sign(int site) const {return orientations[site].first;}; 

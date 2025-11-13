@@ -6,6 +6,7 @@
 #include <string>
 #include "Configuration.h"
 #include "Particle.h"
+#include "Model.h"
 
 namespace marqu{
 
@@ -30,6 +31,8 @@ namespace marqu{
       // Only product states are supported for now
       void setInitialState(const std::string & orientations); 
       int initialize(int particleNumber, bool removeStatic = true); 
+
+      //void setModel(const Model & model);
 
     protected:
       int particleNumber = 0;
@@ -57,6 +60,7 @@ namespace marqu{
       std::uniform_real_distribution<double> uni_dist = std::uniform_real_distribution<double>(0,1); 
 
       Configuration * initConfig = nullptr;
+      Model * model = nullptr;
   };
 }
 

@@ -1,6 +1,6 @@
 # MarQu
 
-A library for simulating the Schrödinger equation of spin chains based on a classical stochatisc interpretation as a continuous-time Markov chain.
+A library for simulating the Schrödinger equation of spin chains based on a classical stochastic interpretation as a continuous-time Markov chain.
 Details of the underlying mathematical formulation and algorithm implementation can be found in:
 
 TBA
