@@ -4,6 +4,7 @@
 #include <vector>
 #include <random>
 #include <string>
+
 #include "Configuration.h"
 #include "Particle.h"
 #include "Model.h"
