@@ -2,8 +2,8 @@
 #define CONFIGURATION_H
 
 #include <string>
+#include <vector>
 #include <cstdint>
-#include <string>
 
 namespace marqu{
 
@@ -43,24 +43,28 @@ namespace marqu{
       Configuration(Configuration && other) noexcept; 
       Configuration & operator=(const Configuration & other);
       Configuration & operator=(Configuration&& other) noexcept;
+      const std::pair<Sign, Axis> & operator[](std::size_t index) const{
+	return orientations[index];};
       ~Configuration();
 
       void set(const std::string & orientations);
       void set(const std::pair<Sign, Axis> * orientations); 
       void set(int configuration);
+      void subSet(const Configuration & other, const std::vector<std::size_t> & sites);
 
       Sign sign(int site) const {return orientations[site].first;}; 
       Axis axis(int site) const {return orientations[site].second;};
       std::string toString() const;
       int flattened() const {return configuration;}; 
+      int subFlattened(const std::vector<std::size_t> & sites) const;
       int getN() const {return N;};
 
     protected:
       void updateConfiguration();
 
-      std::pair<Sign, Axis> * orientations;
-      int configuration; //Flattened configuration index
       int N; //Number of spins
+      int configuration; //Flattened configuration index
+      std::pair<Sign, Axis> * orientations;
   }; 
 
   int flattenConfiguration(const std::string & orientations);

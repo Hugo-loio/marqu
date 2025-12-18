@@ -12,33 +12,40 @@ namespace marqu{
   using TransitionRow = std::vector<Transition>; //Only non-zero elements
   using RateMatrix = std::vector<TransitionRow>;
 
-  using InteractionSites = std::vector<int>;
-  using InteractionSitesGroup = std::vector<std::vector<int>>;
+  using InteractionSites = std::vector<std::size_t>;
+  using InteractionSitesGroup = std::vector<std::vector<std::size_t>>;
 
   class Model{
     public:
-      Model(int N);
-      //~Model();
+      Model(std::size_t N);
+
+      ~Model() = default;
+      Model(const Model& other) = default;
+      Model& operator=(const Model& other) = default;
+      Model(Model&& other) noexcept = default;
+      Model& operator=(Model&& other) noexcept = default;
 
       // name : Rate matrix name, created in the python lib 
       // sites : Set of sites to apply the matrix
       void addRateMatrix(const std::string & name,
-	  const std::vector<std::vector<int>> & sites); 
+	  const std::vector<std::vector<std::size_t>> & sites); 
 
-      //std::pair<Configuration, Sign> randomEvent(const Particle & particle);
+      void clear();
 
-    protected:
-      const int N;
       //Groups of groups of sites with the same corresponding rate matrix
-      std::vector<InteractionSitesGroup> sites;
+      std::vector<InteractionSitesGroup> siteCollection;
 
       // [site set group][input config][output index]
       std::vector<RateMatrix> localMPlus;
       std::vector<RateMatrix> localMMinus;
 
-    private:
+    protected:
+      const std::size_t N;
       std::string basePath = "marqu_data/rate_matrix/";
-      int findNSites(const std::string & name);
+
+    private:
+      std::size_t findNSites(const std::string & name) const;
+      void checkSites(const std::vector<std::vector<std::size_t>> & sites) const;
   };
 }
 

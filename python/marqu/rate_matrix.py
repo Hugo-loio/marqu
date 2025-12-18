@@ -5,20 +5,17 @@ import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
 
-from .utils import eps
-from .utils import pauli_to_int
-from .utils import check_data_dir
-from .utils import check_dir
+from .utils import *
+from .gauge_transform import *
+
+def flatten(axis, sign):
+    return axis*2 + (1 - sign) // 2
 
 def g_tensor(aj, ak, pj1, sj1, pk1, sk1, pj2, sj2, pk2, sk2):
     res1 = eps[aj,pj1,pj2]*sj1*sj2*(sk2 + sk1*int(ak == pk1))*int(ak == pk2)
     res2 = eps[ak,pk1,pk2]*sk1*sk2*(sj2 + sj1*int(aj == pj1))*int(aj == pj2)
     print(eps[aj,pj1,pj2], sj1, sj2, ak, pk2)
     return res1 + res2
-
-def all_pairs(N : int, pbc : bool, distance : int = 1):
-    return [(i, (i + distance) % N) for i in range(N) 
-            if (i + distance < N or pbc)]
 
 def local_hamiltonian_M(pauli : int, coupling : float):
     paulis = [0,1,2]
@@ -35,42 +32,54 @@ def pairwise_hamiltonian_M(pauli1 : int, pauli2 : int, coupling : complex):
     signs = [-1,1]
     M = np.zeros((36,36))
     for pj1,sj1,pk1,sk1,pj2,sj2,pk2,sk2 in product(*((paulis, signs,)*4)):
-        row = 6*(pj1*2 + (sj1 + 1)//2) + pk1*2 + (sk1 + 1)//2
-        col = 6*(pj2*2 + (sj2 + 1)//2) + pk2*2 + (sk2 + 1)//2
+        row = 6*flatten(pj1, sj1) + flatten(pk1, sk1)
+        col = 6*flatten(pj2, sj2) + flatten(pk2, sk2)
         M[row, col] = -0.5*coupling*g_tensor(pauli1, pauli2, 
                                              pj1, sj1, pk1, sk1, 
                                              pj2, sj2, pk2, sk2)
-        if(M[row, col] != 0):
-            print(M[row, col])
     return M
 
 def local_traceless_noise_M(a : NDArray[complex]):
+    M = np.zeros((6,6))
+    a2 = np.real(a * np.conjugate(a))
+
     paulis = [0,1,2]
     signs = [-1,1]
-    M = np.zeros((6,6))
-    a2 = np.square(a)
-    px = np.array([[0,1],[1,0]])
-
-    M += kron(np.diag(a2 - 1), np.eye(2))
-    M += kron(np.diag(np.sum(a2) - np.square(a)), px)
-    M += kron(np.diag(np.real(np.conjugate(a)*np.sum(a) - a2)), np.eye(2)-px)
+    #gamma = beta_j', s = s_j'
+    for betaj,sj,gamma,s in product(*((paulis, signs,)*2)):
+        row = flatten(betaj, sj)
+        col = flatten(gamma, s)
+        aux1 = np.sum([np.imag(a[alpha] * np.conjugate(a[gamma])) * eps[alpha, gamma, betaj] for alpha in paulis for gamma in paulis])
+        aux2 = a2[betaj] - np.sum(a2)
+        if(gamma == betaj): 
+            M[row, col] += sj * aux1
+            M[row, col] += sj * s * aux2
+        else:
+            M[row, col] += sj * s * np.real(a[betaj] * np.conjugate(a[gamma]))
 
     return M
 
+def local_noise_M(a : NDArray[complex], b : complex):
+    M = local_traceless_noise_M(a)
+
+    paulis = [0,1,2]
+    signs = [-1,1]
+    #gamma = beta_j', s = s_j'
+    for betaj,sj,gamma,s in product(*((paulis, signs,)*2)):
+        row = flatten(betaj, sj)
+        col = flatten(gamma, s)
+        for alpha in paulis:
+            M[row, col] += np.imag(b*np.conjugate(a[alpha])) * \
+                    eps[alpha, betaj, gamma] * sj * s
+
+    return M
 
 # Add the noise 
 class RateMatrix:
     def __init__(self, nsites : int = 1):
         self.nsites = nsites
         self.M = np.zeros((6**nsites,6**nsites))
-
-    @abstractmethod
-    def add_hamiltonian(self, pauli : str, coupling : complex):
-        raise NotImplementedError
-
-    #@abstractmethod
-    #def add_noise(self, pauli : str, dampling_rate : float):
-    #    raise NotImplementedError
+        self.gauge = GaugeTransform(nsites)
 
     def save(self, name):
         data_dir = check_data_dir()
@@ -80,7 +89,18 @@ class RateMatrix:
         np.savetxt(path + "M.csv", self.M, delimiter=',', fmt="%.8f")
         pd.Series(props).to_csv(path + "props.csv", header=False)
 
-    #def gauge_optimize(self):
+    #@abstractmethod
+    #def add_noise(self, pauli : str, dampling_rate : float):
+    #    raise NotImplementedError
+
+    @abstractmethod
+    def add_hamiltonian(self, pauli : str, coupling : complex):
+        raise NotImplementedError
+
+    def gauge_optimize(self):
+        params = np.zeros(self.gauge.dof)
+
+
 
 class LocalRateMatrix(RateMatrix):
     def __init__(self, name):

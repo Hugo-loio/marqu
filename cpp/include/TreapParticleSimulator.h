@@ -14,7 +14,7 @@ namespace marqu{
       void discreteTimeStep(double dt);
       double gillespieTimeStep();
 
-      void displayParticles() const {displayParticles(root);};
+      void displayParticles() const;
       double compressionRate() {return (double)root->cumulParticles/root->size;};
 
       bool annihilateParticles = true;

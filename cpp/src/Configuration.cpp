@@ -1,7 +1,7 @@
 #include <stdexcept>
+#include <iostream>
 
 #include "Configuration.h"
-
 
 marqu::Axis marqu::toAxis(char axis){
   switch (axis) {
@@ -76,7 +76,6 @@ marqu::Configuration::Configuration(const Configuration & other) :
   }
 }
 
-//Consider using member initializer lists for other constructors aswell 
 marqu::Configuration::Configuration(Configuration && other) noexcept 
 : N(other.N),
   configuration(other.configuration),
@@ -143,11 +142,30 @@ void marqu::Configuration::set(int configuration){
   }
 }
 
+void marqu::Configuration::subSet(const Configuration & other, 
+    const std::vector<std::size_t> & sites){
+  for(std::size_t i = 0; i < sites.size(); i++){
+    orientations[sites[i]] = other[i];
+  }
+  updateConfiguration();
+}
+
 std::string marqu::Configuration::toString() const{
   std::string res = "";
   for(int i = 0; i < N; ++i){
     res += toChar(this->orientations[i].first);
     res += toChar(this->orientations[i].second);
+  }
+  return res;
+}
+
+int marqu::Configuration::subFlattened(const std::vector<std::size_t> & sites) const{
+  int res = 0;
+  int multiplier = 1;
+  for(int i : sites){
+    res += multiplier * toInt(orientations[i].first, orientations[i].second);
+    multiplier *= 6;
+    //std::cout << "site " << i << " " << res << std::endl;
   }
   return res;
 }

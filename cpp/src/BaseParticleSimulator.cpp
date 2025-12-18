@@ -13,6 +13,69 @@ marqu::BaseParticleSimulator::~BaseParticleSimulator(){
   if(initConfig != nullptr){
     delete initConfig;
   }
+  if(model != nullptr){
+    delete model;
+  }
+}
+
+double marqu::BaseParticleSimulator::eventRate(const Configuration & configuration) const {
+  if(model == nullptr){
+    throw std::runtime_error("Rates not implemented, model not found");
+  }
+
+  double res = 0;
+  for(std::size_t i = 0; i < model->siteCollection.size(); i++){
+    for(const auto & sites : model->siteCollection[i]){
+      int row = configuration.subFlattened(sites);
+      auto & rowMinus = model->localMMinus[i][row];
+      auto & rowPlus = model->localMPlus[i][row];
+      if(! rowMinus.empty()) res += rowMinus.back().second;
+      if(! rowPlus.empty()) res += rowPlus.back().second;
+    }
+  }
+  return res;
+}
+
+std::pair<marqu::Configuration, marqu::Sign> marqu::BaseParticleSimulator::randomEvent(const Particle & particle){
+  if(model == nullptr){
+    throw std::runtime_error("Transitions not implemented, model not found");
+  }
+
+  Configuration config(particle.configuration);
+  double rate = uni_dist(gen)*particle.eventRate;
+  for(std::size_t i = 0; i < model->siteCollection.size(); i++){
+    for(const auto & sites : model->siteCollection[i]){
+      int row = config.subFlattened(sites);
+      auto & rowMinus = model->localMMinus[i][row];
+      auto & rowPlus = model->localMPlus[i][row];
+
+      if(!rowMinus.empty()){
+	if(rate <= rowMinus.back().second){
+	  for(const auto & transition : rowMinus){
+	    if(rate <= transition.second){
+	      config.subSet(transition.first, sites);
+	      return std::make_pair(config, Sign::minus);
+	    }
+	  }
+	}
+	rate -= rowMinus.back().second;
+      }
+
+      if(!rowPlus.empty()){
+	if(rate <= rowPlus.back().second){
+	  for(const auto & transition : rowPlus){
+	    if(rate <= transition.second){
+	      config.subSet(transition.first, sites);
+	      return std::make_pair(config, Sign::plus);
+	    }
+	  }
+	}
+	rate -= rowPlus.back().second;
+      }
+    }
+  }
+
+  throw std::runtime_error("Rate accumulator exceeded total event rate");
 }
 
 int marqu::BaseParticleSimulator::initialize(int particleNumber, bool removeStatic){
@@ -63,10 +126,17 @@ int marqu::BaseParticleSimulator::initialize(int particleNumber, bool removeStat
   return nStatic;
 }
 
+void marqu::BaseParticleSimulator::setModel(const Model & model){
+  this->model = new Model(model);
+}
+
+void marqu::BaseParticleSimulator::setModel(Model && model){
+  this->model = new Model(std::move(model));
+}
+
 void marqu::BaseParticleSimulator::updateObservable(const Particle & particle, bool add){
   std::vector<double> res = observables(particle.configuration);
   int sign = (add ^ particle.type) ? -1 : 1;
-  //std::cout << std::setprecision(8) << "add " << add << " sign " << sign << " res " << res[0] << " " << res[0]/initParticleNumber << " " << initParticleNumber << std::endl;
   if(observableTracker.size() == 0){
     for(const double & val : res){
       if(! add) throw std::invalid_argument("Cannot subtract to empty tracker");
@@ -76,7 +146,7 @@ void marqu::BaseParticleSimulator::updateObservable(const Particle & particle, b
   }
   else{
     if(observableTracker.size() != res.size()){
-	throw std::runtime_error("Number of observables changed mid simulation!");
+      throw std::runtime_error("Number of observables changed mid simulation!");
     }
     for(int i = 0; i < observableTracker.size(); i++){
       //observableTracker[i] += sign*res[i]/initParticleNumber;
@@ -111,10 +181,8 @@ void marqu::BaseParticleSimulator::trackMove(const Particle & pIn, const Particl
 }
 
 void marqu::BaseParticleSimulator::trackAnnihilate(int nAnnihilations, double configRate){
-  //std::cout << 1 << " " << particleNumber << " " << totalRate << std::endl;
   particleNumber -= 2*nAnnihilations;
   totalRate -= 2*nAnnihilations*configRate;
-  //std::cout << 2 << " " << particleNumber << " " << totalRate << std::endl;
 }
 
 

@@ -17,7 +17,6 @@ void marqu::TreapParticleSimulator::discreteTimeStep(double dt){
 }
 
 double marqu::TreapParticleSimulator::gillespieTimeStep(){
-  //std::cout << "Gillespie: " << particleNumber << "
   if(totalRate <= 0) {
     throw std::runtime_error("All particles are stationary");
   }
@@ -28,15 +27,17 @@ double marqu::TreapParticleSimulator::gillespieTimeStep(){
   return dt;
 }
 
+void marqu::TreapParticleSimulator::displayParticles() const{
+  if(root) displayParticles(root);
+  else std::cout << "No particles in the simulator!" << std::endl;
+}
 
 void marqu::TreapParticleSimulator::clearParticles(){
   clear(root);
   trackClear();
 }
 void marqu::TreapParticleSimulator::addParticle(const Particle & particle){
-  //std::cout << "Adding : " << particle.type << " " << particle.configuration.toString() << std::endl;
   int res = add(root, particle);
-  //std::cout << "Res: " << res << std::endl;
   if(res == 1){
     Node *left, *right;
     split(root, particle.configuration.flattened(), left, right);
@@ -72,7 +73,17 @@ void marqu::TreapParticleSimulator::moveParticle(const Particle & out, Particle 
   addParticle(std::move(in));
 }
 
-// Simplified for unitary evolution (TODO: incorporate open systems later)
+// Simplified for unitary evolution 
+//void marqu::TreapParticleSimulator::markovStep(const Particle & particle){
+//  std::pair<Configuration, Sign> res = randomEvent(particle);
+//  bool type = (res.second == Sign::plus) ? particle.type : ! particle.type;
+//  Node * config = findConfig(root, res.first.flattened());
+//  double rate = config ? config->rate : eventRate(res.first);
+//
+//  Particle newParticle(std::move(res.first), type, rate);
+//  addParticle(newParticle);
+//}
+
 void marqu::TreapParticleSimulator::markovStep(const Particle & particle){
   std::pair<Configuration, Sign> res = randomEvent(particle);
   bool type = (res.second == Sign::plus) ? particle.type : ! particle.type;
@@ -80,7 +91,13 @@ void marqu::TreapParticleSimulator::markovStep(const Particle & particle){
   double rate = config ? config->rate : eventRate(res.first);
 
   Particle newParticle(std::move(res.first), type, rate);
-  addParticle(newParticle);
+  if(res.second == Sign::plus){
+    moveParticle(particle, newParticle);
+  }
+  else{
+    addParticle(particle);
+    addParticle(newParticle);
+  }
 }
 
 marqu::TreapParticleSimulator::Node::Node(const Particle & particle, int prio):
@@ -176,17 +193,13 @@ int marqu::TreapParticleSimulator::add(Node * tree, const Particle & particle){
   if(!tree) return 1;
   if(tree->configuration.flattened() == particle.configuration.flattened()){
     particle.type ? tree->nParticles++ : tree->nAntiParticles++;
-    //std::cout << "Adding: " << particle.type << " " << particle.configuration.toString() << std::endl;
-    //std::cout << "Check: " << tree->configuration.flattened() << " " << particle.configuration.flattened() << " " << tree->configuration.toString() << " " << particle.configuration.toString() << std::endl;
     if(annihilateParticles){
       int nAnnihilate = std::min(tree->nParticles, tree->nAntiParticles);
-      //std::cout << "anni: " << tree->configuration.toString() << " " << tree->nParticles << " " << tree->nAntiParticles << std::endl;
       if(nAnnihilate > 0){
 	tree->nParticles -= nAnnihilate;
 	tree->nAntiParticles -= nAnnihilate;
 	trackAnnihilate(nAnnihilate, tree->rate);
 	if(tree->nParticles == tree->nAntiParticles) returnVal = 2;
-	//std::cout << "Changed: " << returnVal << std::endl;
       }
     }
   }
@@ -197,7 +210,6 @@ int marqu::TreapParticleSimulator::add(Node * tree, const Particle & particle){
     returnVal = add(tree->right, particle);
   }
   recalc(tree);
-  //std::cout << "Returning: " << returnVal << std::endl;
   return returnVal;
 }
 
@@ -214,7 +226,7 @@ void marqu::TreapParticleSimulator::displayParticles(Node * tree) const{
   displayParticles(tree->left);
   std::cout << "Configuration " << tree->configuration.toString() << ": " 
     << tree->nParticles << " particles, " << tree->nAntiParticles 
-    << " antiparticles" << std::endl;
+    << " antiparticles, escape rate " << tree->rate << std::endl;
   displayParticles(tree->right);
 }
 

@@ -10,7 +10,6 @@
 #include "Model.h"
 
 namespace marqu{
-
   class BaseParticleSimulator{
     public:
       BaseParticleSimulator() : gen(std::random_device{}()){};
@@ -33,7 +32,8 @@ namespace marqu{
       void setInitialState(const std::string & orientations); 
       int initialize(int particleNumber, bool removeStatic = true); 
 
-      //void setModel(const Model & model);
+      void setModel(const Model & model);
+      void setModel(Model && model);
 
     protected:
       int particleNumber = 0;
@@ -41,8 +41,10 @@ namespace marqu{
       double totalRate = 0;
       std::vector<double> observableTracker;
 
-      virtual double eventRate(const Configuration & configuration) const = 0; //User implementation
-      virtual std::pair<Configuration,Sign> randomEvent(const Particle & particle) = 0; //User implementation, the sign refers to the resulting M+ or M-
+      virtual double eventRate(const Configuration & configuration) const; 
+      //The sign refers to the resulting M+ or M-
+      //Not const due to the random number generator
+      virtual std::pair<Configuration,Sign> randomEvent(const Particle & particle); 
 
       // If (add == false) then subtract (when particles are moved or deleted)
       void updateObservable(const Particle & particle, bool add);
