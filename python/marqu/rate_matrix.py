@@ -1,78 +1,26 @@
-from itertools import product
 from abc import ABC, abstractmethod
 
 import numpy as np
+from scipy.optimize import minimize
 import pandas as pd
-from numpy.typing import NDArray
 
 from .utils import *
 from .gauge_transform import *
+from .rate_matrix_terms import *
 
-def flatten(axis, sign):
-    return axis*2 + (1 - sign) // 2
+def cost_function(params, rate_matrix, alpha):
+    rate_matrix.gauge.set(params)
+    matrix = rate_matrix.M + rate_matrix.gauge.Lambda
+    #negative_matrix = np.where(matrix < 0, matrix, 0)
+    np.fill_diagonal(matrix, 0)
 
-def g_tensor(aj, ak, pj1, sj1, pk1, sk1, pj2, sj2, pk2, sk2):
-    res1 = eps[aj,pj1,pj2]*sj1*sj2*(sk2 + sk1*int(ak == pk1))*int(ak == pk2)
-    res2 = eps[ak,pk1,pk2]*sk1*sk2*(sj2 + sj1*int(aj == pj1))*int(aj == pj2)
-    print(eps[aj,pj1,pj2], sj1, sj2, ak, pk2)
-    return res1 + res2
-
-def local_hamiltonian_M(pauli : int, coupling : float):
-    paulis = [0,1,2]
-    signs = [-1,1]
-    M = np.zeros((6,6))
-    for pi,si,pj,sj in product(paulis, signs, paulis, signs):
-        i = pi*2 + (si + 1)//2
-        j = pj*2 + (sj + 1)//2
-        M[i,j] = -coupling*eps[pauli, pi, pj]*si*sj
-    return M
-
-def pairwise_hamiltonian_M(pauli1 : int, pauli2 : int, coupling : complex):
-    paulis = [0,1,2]
-    signs = [-1,1]
-    M = np.zeros((36,36))
-    for pj1,sj1,pk1,sk1,pj2,sj2,pk2,sk2 in product(*((paulis, signs,)*4)):
-        row = 6*flatten(pj1, sj1) + flatten(pk1, sk1)
-        col = 6*flatten(pj2, sj2) + flatten(pk2, sk2)
-        M[row, col] = -0.5*coupling*g_tensor(pauli1, pauli2, 
-                                             pj1, sj1, pk1, sk1, 
-                                             pj2, sj2, pk2, sk2)
-    return M
-
-def local_traceless_noise_M(a : NDArray[complex]):
-    M = np.zeros((6,6))
-    a2 = np.real(a * np.conjugate(a))
-
-    paulis = [0,1,2]
-    signs = [-1,1]
-    #gamma = beta_j', s = s_j'
-    for betaj,sj,gamma,s in product(*((paulis, signs,)*2)):
-        row = flatten(betaj, sj)
-        col = flatten(gamma, s)
-        aux1 = np.sum([np.imag(a[alpha] * np.conjugate(a[gamma])) * eps[alpha, gamma, betaj] for alpha in paulis for gamma in paulis])
-        aux2 = a2[betaj] - np.sum(a2)
-        if(gamma == betaj): 
-            M[row, col] += sj * aux1
-            M[row, col] += sj * s * aux2
-        else:
-            M[row, col] += sj * s * np.real(a[betaj] * np.conjugate(a[gamma]))
-
-    return M
-
-def local_noise_M(a : NDArray[complex], b : complex):
-    M = local_traceless_noise_M(a)
-
-    paulis = [0,1,2]
-    signs = [-1,1]
-    #gamma = beta_j', s = s_j'
-    for betaj,sj,gamma,s in product(*((paulis, signs,)*2)):
-        row = flatten(betaj, sj)
-        col = flatten(gamma, s)
-        for alpha in paulis:
-            M[row, col] += np.imag(b*np.conjugate(a[alpha])) * \
-                    eps[alpha, betaj, gamma] * sj * s
-
-    return M
+    # Check for overflow: if -x * alpha is too large, exp() overflows.
+    # For very large negative numbers, softplus(-x) ~= -x.
+    # We can use np.logaddexp for numerical stability: log(exp(a) + exp(b))
+    
+    # We want sum( log(1 + exp(-alpha * x)) ) / alpha
+    # This is equivalent to sum( logaddexp(0, -alpha * x) ) / alpha
+    return np.sum(np.logaddexp(0, -alpha * matrix)) / alpha
 
 # Add the noise 
 class RateMatrix:
@@ -89,18 +37,34 @@ class RateMatrix:
         np.savetxt(path + "M.csv", self.M, delimiter=',', fmt="%.8f")
         pd.Series(props).to_csv(path + "props.csv", header=False)
 
-    #@abstractmethod
-    #def add_noise(self, pauli : str, dampling_rate : float):
-    #    raise NotImplementedError
-
     @abstractmethod
     def add_hamiltonian(self, pauli : str, coupling : complex):
         raise NotImplementedError
 
     def gauge_optimize(self):
-        params = np.zeros(self.gauge.dof)
+        zeros = np.zeros(self.gauge.dof)
+        params = np.copy(zeros)
+        print("No gauge cost: ", sum_off_diag_negative(self.M))
+        alphas = [100.0, 1000.0, 10000.0]
+        for alpha in alphas:
+            result = minimize(
+                            fun=cost_function, 
+                            x0=params, 
+                            args=(self, alpha), 
+                            method='L-BFGS-B',
+                            options={
+                                'disp': True, 
+                                'maxiter': 5000, 
+                                'maxfun': 100000,
+                                'ftol': 1e-12, 
+                                'gtol': 1e-12
+                            }
+                        )
 
-
+            print(result)
+            self.gauge.set(result.x)
+            params = result.x
+            print("New cost: ", sum_off_diag_negative(self.M + self.gauge.Lambda))
 
 class LocalRateMatrix(RateMatrix):
     def __init__(self, name):
@@ -109,6 +73,8 @@ class LocalRateMatrix(RateMatrix):
     def add_hamiltonian(self, pauli : str, coupling : complex):
         self.M += local_hamiltonian_M(pauli_to_int(pauli), coupling)
 
+    def add_noise(self, a : NDArray[complex], b : complex, damping_rate : float):
+        self.M += damping_rate*local_noise_M(a,b)
 
 class PairwiseRateMatrix(RateMatrix):
     def __init__(self):
@@ -126,3 +92,10 @@ class PairwiseRateMatrix(RateMatrix):
             pauli1 = pauli_to_int(pauli[0])
             pauli2 = pauli_to_int(pauli[1])
             self.M += pairwise_hamiltonian_M(pauli1, pauli2, coupling)
+
+    def add_local_noise(self, a : NDArray[complex], b : complex, damping_rate : float):
+        auxM = damping_rate*local_noise_M(a,b)
+        print(auxM)
+        self.M += np.kron(np.eye(6), auxM)
+        self.M += np.kron(auxM, np.eye(6))
+
