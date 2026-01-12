@@ -71,3 +71,15 @@ def local_noise_M(a : NDArray[complex], b : complex):
                     eps[alpha, betaj, gamma] * sj * s
 
     return M
+
+def pauli_pair_noise_M(pauli1 : int, pauli2 : int):
+    paulis = [0,1,2]
+    signs = [-1,1]
+    M = np.zeros((36,36))
+    for pj,sj,pk,sk in product(*((paulis, signs,)*2)):
+        row = 6*flatten(pj, sj) + flatten(pk, sk)
+        M[row, row] -= 1 
+        col = 6*flatten(pj, (2*int(pauli1 == pj) - 1)*sj) + \
+                flatten(pk, (2*int(pauli2 == pk) - 1)*sk) 
+        M[row, col] += 1
+    return M
