@@ -8,21 +8,6 @@ from .utils import *
 from .gauge_transform import *
 from .rate_matrix_terms import *
 
-#def cost_function(params, rate_matrix, alpha):
-#    rate_matrix.gauge.set(params)
-#    matrix = rate_matrix.M + rate_matrix.gauge.Lambda
-#    #negative_matrix = np.where(matrix < 0, matrix, 0)
-#    np.fill_diagonal(matrix, 0)
-#
-#    # Check for overflow: if -x * alpha is too large, exp() overflows.
-#    # For very large negative numbers, softplus(-x) ~= -x.
-#    # We can use np.logaddexp for numerical stability: log(exp(a) + exp(b))
-#    
-#    # We want sum( log(1 + exp(-alpha * x)) ) / alpha
-#    # This is equivalent to sum( logaddexp(0, -alpha * x) ) / alpha
-#    return np.sum(np.logaddexp(0, -alpha * matrix)) / alpha
-
-# Add the noise 
 class RateMatrix:
     def __init__(self, nsites : int = 1):
         self.nsites = nsites
@@ -40,31 +25,6 @@ class RateMatrix:
     @abstractmethod
     def add_hamiltonian(self, pauli : str, coupling : complex):
         raise NotImplementedError
-
-    #def gauge_optimize(self):
-    #    zeros = np.zeros(self.gauge.dof)
-    #    params = np.copy(zeros)
-    #    print("No gauge cost: ", sum_off_diag_negative(self.M))
-    #    alphas = [100.0, 1000.0, 10000.0]
-    #    for alpha in alphas:
-    #        result = minimize(
-    #                        fun=cost_function, 
-    #                        x0=params, 
-    #                        args=(self, alpha), 
-    #                        method='L-BFGS-B',
-    #                        options={
-    #                            'disp': True, 
-    #                            'maxiter': 5000, 
-    #                            'maxfun': 100000,
-    #                            'ftol': 1e-12, 
-    #                            'gtol': 1e-12
-    #                        }
-    #                    )
-
-    #        print(result)
-    #        self.gauge.set(result.x)
-    #        params = result.x
-    #        print("New cost: ", sum_off_diag_negative(self.M + self.gauge.Lambda))
 
 class LocalRateMatrix(RateMatrix):
     def __init__(self):
@@ -98,7 +58,7 @@ class PairwiseRateMatrix(RateMatrix):
         self.M += np.kron(np.eye(6), auxM)
         self.M += np.kron(auxM, np.eye(6))
     
-    def add_pauli_pair_noise(self, pauli : str, dampling_rate : float):
+    def add_pauli_pair_noise(self, pauli : str, damping_rate : float):
         pauli1 = pauli_to_int(pauli[0])
         pauli2 = pauli_to_int(pauli[1])
         self.M += damping_rate * pauli_pair_noise_M(pauli1, pauli2)

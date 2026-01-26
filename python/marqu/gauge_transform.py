@@ -23,7 +23,8 @@ class GaugeTransform:
         self.perm = np.concatenate(([0], axis_indices, sign_indices))
         self.inv_perm = np.argsort(self.perm)
         self.shape_base = ((self.dim, self.dim))
-        self.shape_perm = (self.dim,) + (3, 2) * self.nsites
+        self.shape_tensor = (self.dim,) + (3, 2) * self.nsites
+        self.shape_perm_tensor = np.array(self.shape_tensor)[self.perm]
         self.shape_assign = (self.dim, self.axis_dim, self.sign_dim)
 
     def set(self, parameters):
@@ -32,13 +33,13 @@ class GaugeTransform:
         beta[-1,:-1] = -np.sum(beta[:,:-1], axis = 0)
         beta[:,-1] = -np.sum(beta, axis = 1)
 
-        self.Lambda = np.reshape(self.Lambda, self.shape_perm)
+        self.Lambda = np.reshape(self.Lambda, self.shape_tensor)
         self.Lambda = np.transpose(self.Lambda, self.perm)
 
         self.Lambda = np.reshape(self.Lambda, self.shape_assign)
         self.Lambda[:] = beta[:,:,np.newaxis]
 
-        self.Lambda = np.reshape(self.Lambda, self.shape_perm)
+        self.Lambda = np.reshape(self.Lambda, self.shape_perm_tensor)
         self.Lambda = np.transpose(self.Lambda, self.inv_perm)
 
         self.Lambda = np.reshape(self.Lambda, (self.dim,self.dim))

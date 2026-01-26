@@ -33,7 +33,8 @@ def lp_optimize(rate_matrix : RateMatrix):
         A_ub=A,
         b_ub=b,
         bounds=bounds_p + bounds_t,
-        method='highs' # 'highs' is much faster/more robust than default
+        method='highs', 
+        #options={'disp' : True}
     )
     
     if res.success:
