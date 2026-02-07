@@ -19,18 +19,13 @@ class GaugeTransform:
         A = np.column_stack([projector(i, nsites).flatten()
                              for i in range(self.dim)])
         A = np.vstack([A.real, A.imag])
-        #print(A.shape)
         self.basis = null_space(A)
         self.dof = (self.dim-1) * self.basis.shape[1]
         self.row_dof = self.basis.shape[1]
         self.Lambda = np.zeros((self.dim, self.dim))
-        #print(self.basis)
-        #print(self.basis.shape, self.Lambda.shape, self.dof, self.dim)
-
-        #print("Number of parameters =", self.dof)
 
     def set(self, parameters):
         for i in range(self.dim-1):
             self.Lambda[i] = self.basis @ \
                     parameters[i*self.row_dof:(i+1)*self.row_dof]
-        self.Lambda[-1] = np.sum(self.Lambda[:-1], axis = 0)
+        self.Lambda[-1] = -np.sum(self.Lambda[:-1], axis = 0)

@@ -19,7 +19,8 @@ class RateMatrix:
         rate_matrix_dir = check_dir(data_dir + "rate_matrix/")
         path = check_dir(rate_matrix_dir + name + "/")
         props = {'nsites' : self.nsites}
-        np.savetxt(path + "M.csv", self.M, delimiter=',', fmt="%.8f")
+        np.savetxt(path + "M.csv", self.M + self.gauge.Lambda, 
+                   delimiter=',', fmt="%.8f")
         pd.Series(props).to_csv(path + "props.csv", header=False)
 
     @abstractmethod

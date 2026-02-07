@@ -2,6 +2,7 @@
 #include <iostream>
 #include <algorithm>
 
+// TODO: Fix a lot of repeated tree search operations looking for the same node
 
 void marqu::TreapParticleSimulator::discreteTimeStep(double dt){
   if(warnDiscrete){
