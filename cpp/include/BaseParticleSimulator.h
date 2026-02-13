@@ -27,6 +27,7 @@ namespace marqu{
       virtual double gillespieTimeStep() = 0;
 
       virtual void displayParticles() const = 0;
+      virtual double compressionRate() {return 1;};
 
       // Only product states are supported for now
       void setInitialState(const std::string & orientations); 

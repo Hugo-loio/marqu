@@ -52,8 +52,8 @@ namespace marqu{
       void set(int configuration);
       void subSet(const Configuration & other, const std::vector<std::size_t> & sites);
 
-      Sign sign(int site) const {return orientations[site].first;}; 
-      Axis axis(int site) const {return orientations[site].second;};
+      Sign sign(std::size_t site) const {return orientations[site].first;}; 
+      Axis axis(std::size_t site) const {return orientations[site].second;};
       std::string toString() const;
       int flattened() const {return configuration;}; 
       int subFlattened(const std::vector<std::size_t> & sites) const;
