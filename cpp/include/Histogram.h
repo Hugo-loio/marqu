@@ -19,7 +19,7 @@ namespace marqu{
 	std::size_t index(double val) const;
 	std::vector<std::size_t> counts;
 	std::vector<T> histogram;
-	int nBins;
+	std::size_t nBins;
 	double min;
 	double max;
 	double index_rescale;

@@ -19,54 +19,68 @@ namespace marqu{
 	bool removeStaticConfigs = true;
 	bool saveParticleNumber = true;
 	bool saveCompressionRate = true;
-	bool saveRuntime = true;
 	bool saveMaxParticles = true;
-	bool progress = true;
+	bool saveRuntime = true;
+	bool progress = true; 
 	int progressDivisor = 10;
 	int stepMethod = 0; // 0 - Gillespie, 1 - Discrete
 	std::size_t nBins = 100;
+	// This might not make much sense, have instead T/nBins
 	double dt = 0.1; // In case of discrete time step method
       };
 
       Options options;
 
       // Sample averaged results
-      std::vector<Histogram> avgHistObservables;
-      std::optional<Histogram> avgHistParticleNumber;
-      std::optional<Histogram> avgHistCompression;
+      std::vector<std::vector<double>> avgHistObservables;
+      std::optional<std::vector<double>> avgHistParticleNumber;
+      std::optional<std::vector<double>> avgHistCompression;
       std::optional<double> avgMaxParticles;
       std::optional<double> avgRuntime;
+      std::vector<double> times;
 
     protected:
+      using funcPointer = void (Runner::*)();
+
       void resultClear();
-      void resultInitialize();
+      void resultInitialize(double T);
+      void resultRenormalize(std::size_t nSamples, 
+	  std::size_t nInitialParticles);
+
+      std::vector<funcPointer> getUpdaters();
+      funcPointer getTimeStep();
+
       void resetSample(double T);
       void addSample();
+      void printProgress(std::size_t count, std::size_t progressInterval, 
+	  std::size_t nSamples);
+
+      void addAvgHist(std::vector<double> & target, 
+	  const Histogram<double> & source);
+      void renormalize(std::vector<double> & hist, double norm);
 
       void updateObservables();
       void updateParticleNumber();
       void updateCompressionRate();
-      void updateRuntime();
       void updateMaxParticles();
 
       void gillespieTimeStep();
       void discreteTimeStep();
 
       BaseParticleSimulator & simulator;
-      int nInitialParticles;
 
       //Sample local attributes
-      std::chrono::steady_clock start;
+      std::chrono::steady_clock::time_point start;
       double tPrevious;
       double t;
       int maxParticles;
       double floatParticleNumber;
       double compRate; 
-      vector<double> observables;
+      std::vector<double> observables;
       std::size_t nObservables;
-      std::vector<Histogram> histObservables;
-      std::optional<Histogram> histParticleNumber;
-      std::optional<Histogram> histCompression;
+      std::vector<Histogram<double>> histObservables;
+      std::optional<Histogram<double>> histParticleNumber;
+      std::optional<Histogram<double>> histCompression;
   };
 }
 
