@@ -68,9 +68,10 @@ namespace marqu{
       void discreteTimeStep();
 
       BaseParticleSimulator & simulator;
+      std::chrono::steady_clock::time_point runStart;
 
       //Sample local attributes
-      std::chrono::steady_clock::time_point start;
+      std::chrono::steady_clock::time_point sampleStart;
       double tPrevious;
       double t;
       int maxParticles;

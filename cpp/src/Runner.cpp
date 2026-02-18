@@ -14,7 +14,7 @@ void marqu::Runner::run(double T, std::size_t nSamples){
   std::vector<funcPointer> updaters = getUpdaters();
   funcPointer timeStep = getTimeStep();
 
-  for(std::size_t i = 0; i < nSamples; i++){
+  for(std::size_t i = 1; i <= nSamples; i++){
     nInitialParticles += simulator.initialize(options.initialParticleNumber, 
 	options.removeStaticConfigs);
 
@@ -54,6 +54,8 @@ void marqu::Runner::resultInitialize(double T){
   for(std::size_t i = 0; i < options.nBins; i++){
     times[i] = (0.5 + i)*dt;
   }
+
+  runStart = std::chrono::steady_clock::now();
 }
 
 void marqu::Runner::resultRenormalize(std::size_t nSamples, 
@@ -88,7 +90,7 @@ marqu::Runner::funcPointer marqu::Runner::getTimeStep(){
 }
 
 void marqu::Runner::resetSample(double T){
-  start = std::chrono::steady_clock::now();
+  sampleStart = std::chrono::steady_clock::now();
   tPrevious = 0;
   t = 0;
   maxParticles = 0;
@@ -120,7 +122,8 @@ void marqu::Runner::addSample(){
   if(options.saveMaxParticles) *avgMaxParticles += (double)maxParticles;
   if(options.saveRuntime) {
     auto end = std::chrono::steady_clock::now();
-    *avgRuntime += std::chrono::duration<double, std::milli>(end - start).count();
+    *avgRuntime += 
+      std::chrono::duration<double, std::milli>(end - sampleStart).count();
   }
 }
 
@@ -129,7 +132,7 @@ void marqu::Runner::printProgress(std::size_t count,
   if(!options.progress) return;
   if(count % progressInterval == 0 || count == nSamples){
     auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
-	std::chrono::steady_clock::now() - start).count();
+	std::chrono::steady_clock::now() - runStart).count();
 
     int hours = static_cast<int>(elapsed / (1000 * 3600));
     int minutes = static_cast<int>((elapsed / (1000 * 60)) % 60);
