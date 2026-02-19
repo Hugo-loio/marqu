@@ -80,6 +80,9 @@ std::pair<marqu::Configuration, marqu::Sign> marqu::BaseParticleSimulator::rando
 
 int marqu::BaseParticleSimulator::initialize(int particleNumber, bool removeStatic){
   clearParticles();
+  observableTracker = std::vector<double>(getObservableCount(), 0.0);
+  observableBuffer = std::vector<double>(getObservableCount(), 0.0);
+
   if(initConfig == nullptr){
     throw std::runtime_error("Cannot initialize the simulator without setting the initial state!");
   }
@@ -119,9 +122,6 @@ int marqu::BaseParticleSimulator::initialize(int particleNumber, bool removeStat
   }
 
   initParticleNumber = particleNumber + nStatic;
-  //for(double & obs : observableTracker){
-  //  obs /= initParticleNumber;;
-  //}
 
   return nStatic;
 }
@@ -135,23 +135,10 @@ void marqu::BaseParticleSimulator::setModel(Model && model){
 }
 
 void marqu::BaseParticleSimulator::updateObservable(const Particle & particle, bool add){
-  std::vector<double> res = observables(particle.configuration);
+  observables(particle.configuration, observableBuffer);
   int sign = (add ^ particle.type) ? -1 : 1;
-  if(observableTracker.size() == 0){
-    for(const double & val : res){
-      if(! add) throw std::invalid_argument("Cannot subtract to empty tracker");
-      //observableTracker.push_back(sign*val/initParticleNumber);
-      observableTracker.push_back(sign*val);
-    }
-  }
-  else{
-    if(observableTracker.size() != res.size()){
-      throw std::runtime_error("Number of observables changed mid simulation!");
-    }
-    for(int i = 0; i < observableTracker.size(); i++){
-      //observableTracker[i] += sign*res[i]/initParticleNumber;
-      observableTracker[i] += sign*res[i];
-    }
+  for(std::size_t i = 0; i < observableTracker.size(); i++){
+    observableTracker[i] += sign*observableBuffer[i];
   }
 }
 
@@ -184,18 +171,3 @@ void marqu::BaseParticleSimulator::trackAnnihilate(int nAnnihilations, double co
   particleNumber -= 2*nAnnihilations;
   totalRate -= 2*nAnnihilations*configRate;
 }
-
-
-//int marqu::BaseParticleSimulator::occupation(const std::string & orientations){
-//  Configuration config(orientations);
-//  return occupation(config.flattened());
-//}
-//
-//std::vector<int> marqu::BaseParticleSimulator::occupations(const std::vector<std::string> & orientationsVec){
-//  std::vector<int> configurations;
-//  for(const std::string & orientations : orientationsVec){
-//    Configuration config(orientations);
-//    configurations.push_back(config.flattened());
-//  }
-//  return occupations(configurations);
-//}

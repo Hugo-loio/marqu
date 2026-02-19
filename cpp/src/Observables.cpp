@@ -21,6 +21,23 @@ double marqu::pauliString(const std::vector<Axis> & axes,
   return res;
 }
 
+marqu::PauliString::PauliString(std::vector<Axis> axes, 
+    std::vector<std::size_t> sites) : axes(axes), sites(sites){
+  length = sites.size();
+  norm = std::pow(3, length);
+}
+
+double marqu::PauliString::estimate(const Configuration & configuration){
+  Sign sign = Sign::plus;
+  for(std::size_t i = 0; i < length; i++){
+    if(configuration.axis(sites[i]) == axes[i]){
+      sign = sign * configuration.sign(sites[i]); 
+    }
+    else return 0;
+  }
+  return sign * norm;
+}
+
 double marqu::magnetization(marqu::Axis axis, const marqu::Configuration & configuration){
   double res = 0;
   for(int site = 0; site < configuration.getN(); site++){

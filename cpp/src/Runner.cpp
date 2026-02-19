@@ -11,8 +11,8 @@ void marqu::Runner::run(double T, std::size_t nSamples){
   std::size_t nInitialParticles = nSamples;
   std::size_t progressInterval = std::ceil(nSamples/options.progressDivisor);
 
-  std::vector<funcPointer> updaters = getUpdaters();
-  funcPointer timeStep = getTimeStep();
+  //std::vector<funcPointer> updaters = getUpdaters();
+  //funcPointer timeStep = getTimeStep();
 
   for(std::size_t i = 1; i <= nSamples; i++){
     nInitialParticles += simulator.initialize(options.initialParticleNumber, 
@@ -21,12 +21,15 @@ void marqu::Runner::run(double T, std::size_t nSamples){
     resetSample(T);
 
     while(t < T){
-      for (auto updater : updaters) (this->*updater)(); 
+      //for (auto updater : updaters) (this->*updater)(); 
+      update();
       tPrevious = t;
-      (this->*timeStep)();
+      timeStep();
+      //(this->*timeStep)();
     }
     t = T;
-    for (auto updater : updaters) (this->*updater)(); 
+    //for (auto updater : updaters) (this->*updater)(); 
+    update();
 
     addSample();
     printProgress(i, progressInterval, nSamples);
@@ -80,6 +83,13 @@ std::vector<marqu::Runner::funcPointer> marqu::Runner::getUpdaters(){
     updaters.push_back(& Runner::updateCompressionRate);
   if(options.saveMaxParticles) updaters.push_back(& Runner::updateMaxParticles);
   return updaters;
+}
+
+void marqu::Runner::update(){
+  updateObservables();
+  if(options.saveParticleNumber) updateParticleNumber();
+  if(options.saveCompressionRate) updateCompressionRate();
+  if(options.saveMaxParticles) updateMaxParticles();
 }
 
 marqu::Runner::funcPointer marqu::Runner::getTimeStep(){
@@ -180,6 +190,15 @@ void marqu::Runner::updateCompressionRate(){
 
 void marqu::Runner::updateMaxParticles(){
   maxParticles = std::max(maxParticles, simulator.getParticleNumber());
+}
+
+void marqu::Runner::timeStep(){
+  if(options.stepMethod == 0) t += simulator.gillespieTimeStep();
+  else if(options.stepMethod == 1){
+    t += options.dt;
+    simulator.discreteTimeStep(options.dt);
+  }
+  else throw std::invalid_argument("Invalid time step method option");
 }
 
 void marqu::Runner::gillespieTimeStep(){

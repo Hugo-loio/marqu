@@ -59,11 +59,13 @@ namespace marqu{
 	  const Histogram<double> & source);
       void renormalize(std::vector<double> & hist, double norm);
 
+      void update();
       void updateObservables();
       void updateParticleNumber();
       void updateCompressionRate();
       void updateMaxParticles();
 
+      void timeStep();
       void gillespieTimeStep();
       void discreteTimeStep();
 

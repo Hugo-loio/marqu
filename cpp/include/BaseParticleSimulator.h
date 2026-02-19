@@ -19,8 +19,8 @@ namespace marqu{
 
       int getParticleNumber() const {return particleNumber;};
 
-      // Return O_C of each tracked observable such that (<O> = \sum_C O_C p_C)
-      virtual std::vector<double> observables(const Configuration &) const = 0;
+      virtual std::size_t getObservableCount() const = 0;
+      virtual void observables(const Configuration &, std::vector<double> & out) = 0;
       const std::vector<double> & observableEstimate() const{return observableTracker;};
 
       virtual void discreteTimeStep(double dt) = 0;
@@ -41,6 +41,7 @@ namespace marqu{
       int initParticleNumber = 1;
       double totalRate = 0;
       std::vector<double> observableTracker;
+      std::vector<double> observableBuffer;
 
       virtual double eventRate(const Configuration & configuration) const; 
       //The sign refers to the resulting M+ or M-

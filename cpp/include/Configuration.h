@@ -30,8 +30,12 @@ namespace marqu{
   inline int operator*(bool value, Sign sign) {
     return sign * value;
   }
+  inline Sign operator*(Sign a, Sign b) {
+    return static_cast<Sign>(static_cast<bool>(a) ^ static_cast<bool>(b));
+  }
   inline Sign operator-(Sign sign){
-    return (sign == Sign::minus) ? Sign::plus : Sign::minus;
+    return static_cast<Sign>(!static_cast<bool>(sign));
+    //return (sign == Sign::minus) ? Sign::plus : Sign::minus;
   }
 
   class Configuration{

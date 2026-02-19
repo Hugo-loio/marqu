@@ -3,6 +3,8 @@
 
 #include <vector>
 
+//TODO: possible future optimization, same bin counts for multiple observables
+
 namespace marqu{
   template <typename T>
     class Histogram{
@@ -22,7 +24,12 @@ namespace marqu{
 	std::size_t nBins;
 	double min;
 	double max;
-	double index_rescale;
+	double binWidth;
+	double indexRescale;
+
+	std::pair<double, double> lastBin = {0,0}; 
+	std::size_t lastIndex = 0;
+	void updateLast(std::size_t index);
     };
 }
 
