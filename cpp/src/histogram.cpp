@@ -1,12 +1,15 @@
 #include "Histogram.h"
 #include <complex>
 
-
 template <typename T>
 marqu::Histogram<T>::Histogram(double min, double max, std::size_t nBins) : 
-  histogram(nBins, T{}), counts(nBins, 0), nBins(nBins), min(min), max(max) {
+  //histogram(nBins, T{}), counts(nBins, 0), nBins(nBins), min(min), max(max) {
+  histogram(nBins, T{}), nBins(nBins), min(min), max(max) {
     binWidth = (max - min)/nBins;
     indexRescale = 1/binWidth;
+    for(std::size_t i = 0; i < nBins; i++){
+      binBounds.emplace_back(min + binWidth*i, min + binWidth*(i + 1));
+    }
   }
 
 template <typename T>
@@ -16,30 +19,10 @@ std::size_t marqu::Histogram<T>::index(double val) const{
 }
 
 template <typename T>
-void marqu::Histogram<T>::updateLast(std::size_t index){
-  lastIndex = index;
-  lastBin.first = min + binWidth*index;
-  lastBin.second = min + binWidth*(index + 1);
-}
-
-template <typename T>
-void marqu::Histogram<T>::add(double val, T weight){
-  if(val >= lastBin.first && val <= lastBin.second){
-    histogram[lastIndex] += weight;
-    counts[lastIndex]++;
-    return;
-  }
-  std::size_t i = index(val);
-  histogram[i] += weight;
-  counts[i]++;
-  updateLast(i);
-}
-
-template <typename T>
 void marqu::Histogram<T>::add(double windowMin, double windowMax, T weight){
-  if(windowMin >= lastBin.first && windowMax <= lastBin.second){
-    histogram[lastIndex] += weight;
-    counts[lastIndex]++;
+  if(windowMin >= binBounds[lastIndex].first && 
+      windowMax <= binBounds[lastIndex].second){
+    histogram[lastIndex] += weight * (windowMax - windowMin);
     return;
   }
 
@@ -47,15 +30,15 @@ void marqu::Histogram<T>::add(double windowMin, double windowMax, T weight){
   std::size_t indexMax = index(windowMax);
 
   if(indexMin == indexMax){
-    histogram[indexMin] += weight;
-    counts[indexMin]++;
-    updateLast(indexMin);
+    histogram[indexMin] += weight * (windowMax - windowMin);
+    lastIndex = indexMin;
     return;
   }
 
   for(std::size_t i = indexMin; i <= indexMax; i++){
-    histogram[i] += weight;
-    counts[i]++;
+    double overlap = std::min(windowMax, binBounds[i].second) -
+      std::max(windowMin, binBounds[i].first);
+    histogram[i] += weight * overlap;
   }
 }
 
@@ -63,9 +46,15 @@ template <typename T>
 std::vector<T> marqu::Histogram<T>::averagedWeights() const{
   std::vector<T> res(histogram);
   for(std::size_t i = 0; i < nBins; i++){
-    res[i] /= counts[i];
+    res[i] *= indexRescale;
   }
   return res;
+}
+
+template <typename T>
+void marqu::Histogram<T>::clear(){
+  std::fill(histogram.begin(), histogram.end(), T{});
+  lastIndex = 0;
 }
 
 template class marqu::Histogram<std::size_t>;

@@ -13,7 +13,7 @@ namespace marqu{
   class BaseParticleSimulator{
     public:
       BaseParticleSimulator() : gen(std::random_device{}()){};
-      ~BaseParticleSimulator();
+      virtual ~BaseParticleSimulator();
 
       void set_seed(std::mt19937::result_type seed) {gen = std::mt19937(seed);};
 
@@ -21,7 +21,7 @@ namespace marqu{
 
       virtual std::size_t getObservableCount() const = 0;
       virtual void observables(const Configuration &, std::vector<double> & out) = 0;
-      const std::vector<double> & observableEstimate() const{return observableTracker;};
+      virtual const std::vector<double> & observableEstimate() const{return observableTracker;};
 
       virtual void discreteTimeStep(double dt) = 0;
       virtual double gillespieTimeStep() = 0;
@@ -31,7 +31,7 @@ namespace marqu{
 
       // Only product states are supported for now
       void setInitialState(const std::string & orientations); 
-      int initialize(int particleNumber, bool removeStatic = true); 
+      virtual int initialize(int particleNumber = 1, bool removeStatic = true); 
 
       void setModel(const Model & model);
       void setModel(Model && model);
@@ -42,6 +42,8 @@ namespace marqu{
       double totalRate = 0;
       std::vector<double> observableTracker;
       std::vector<double> observableBuffer;
+
+      virtual void checkModel(const Model & model) const;
 
       virtual double eventRate(const Configuration & configuration) const; 
       //The sign refers to the resulting M+ or M-

@@ -67,8 +67,12 @@ void marqu::Model::addRateMatrix(
   std::size_t size = 1;
   for(std::size_t i = 0; i < nSites; i++) size *= 6;
 
-  localMMinus.emplace_back();
-  localMPlus.emplace_back();
+  //localMMinus.emplace_back();
+  //localMPlus.emplace_back();
+  localMMinus.emplace_back(size);
+  localMPlus.emplace_back(size);
+  std::vector<double> cumulPlusRate(size, 0.0);
+  std::vector<double> cumulMinusRate(size, 0.0);
 
   std::string line;
   for (std::size_t i = 0; i < size; i++) {
@@ -78,10 +82,10 @@ void marqu::Model::addRateMatrix(
 
     std::stringstream ss(line);
     std::string value;
-    double cumulativePlusRate = 0;
-    double cumulativeMinusRate = 0;
-    localMMinus.back().emplace_back();
-    localMPlus.back().emplace_back();
+    //double cumulativePlusRate = 0;
+    //double cumulativeMinusRate = 0;
+    //localMMinus.back().emplace_back();
+    //localMPlus.back().emplace_back();
 
     for (std::size_t j = 0; j < size; j++) {
       if (!getline(ss, value, ',')) {
@@ -89,13 +93,17 @@ void marqu::Model::addRateMatrix(
 	    "Not enough columns in row " + std::to_string(i));
       }
 
+      if (i == j) continue;
       try {
 	double val = stod(value);
 	if(val == 0) continue;
-	double & rate = (val < 0) ? cumulativeMinusRate : cumulativePlusRate;
+	//double & rate = (val < 0) ? cumulativeMinusRate : cumulativePlusRate;
+	double & rate = (val < 0) ? cumulMinusRate[j] : cumulPlusRate[j];
 	auto & localM = (val < 0) ? localMMinus : localMPlus;
+	if(val < 0) classical = false;
 	rate += std::abs(val);
-	localM.back()[i].emplace_back(marqu::Configuration(j, nSites), rate);
+	//localM.back()[i].emplace_back(marqu::Configuration(j, nSites), rate);
+	localM.back()[j].emplace_back(marqu::Configuration(i, nSites), rate);
       } catch (...) {
 	throw std::runtime_error("Invalid float value at row " +
 	    std::to_string(i) + ", col " + std::to_string(j));

@@ -18,7 +18,6 @@ namespace marqu{
       double compressionRate() {return (double)root->cumulParticles/root->size;};
 
       bool annihilateParticles = true;
-      void test();
 
     protected:
       void clearParticles();

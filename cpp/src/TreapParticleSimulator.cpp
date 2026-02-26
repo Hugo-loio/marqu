@@ -4,6 +4,7 @@
 
 // TODO: Fix a lot of repeated tree search operations looking for the same node
 
+// This method wasn't properly tested, just use gillespie
 void marqu::TreapParticleSimulator::discreteTimeStep(double dt){
   if(warnDiscrete){
     std::cout << "Warning: using discrete timesteps in the TreapParticleSimulator might be ineficient. The time step complexity is O(n' log n') as opposed to O(n) for VectorParticleSimulator, for n particles distributed by n' configurations" << std::endl;
@@ -15,6 +16,7 @@ void marqu::TreapParticleSimulator::discreteTimeStep(double dt){
   for(int i = 0; i < particleNumber; i++){
     discreteTimeStep(root, dt, i); 
   }
+  totalRate = root->cumulRate;
 }
 
 double marqu::TreapParticleSimulator::gillespieTimeStep(){
@@ -25,6 +27,7 @@ double marqu::TreapParticleSimulator::gillespieTimeStep(){
   double dt = exp_dist(gen);
   double randRate = uni_dist(gen)*totalRate;
   gillespieTimeStep(root, randRate);
+  totalRate = root->cumulRate;
   return dt;
 }
 
@@ -236,8 +239,8 @@ void marqu::TreapParticleSimulator::discreteTimeStep(Node * tree, double dt, int
 
   int nLeft = getCumulParticles(tree->left);
   int nNode = tree->nParticles + tree->nAntiParticles;
-  if(count <= nLeft) return discreteTimeStep(tree->left, dt, count);
-  else if(nLeft + nNode < count) 
+  if(count < nLeft) return discreteTimeStep(tree->left, dt, count);
+  else if(nLeft + nNode <= count) 
     return discreteTimeStep(tree->right, dt, count - nLeft - nNode);
 
   count -= nLeft;

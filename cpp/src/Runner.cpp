@@ -8,8 +8,8 @@
 void marqu::Runner::run(double T, std::size_t nSamples){
   resultClear();
   resultInitialize(T);
-  std::size_t nInitialParticles = nSamples;
-  std::size_t progressInterval = std::ceil(nSamples/options.progressDivisor);
+  std::size_t nInitialParticles = nSamples * options.initialParticleNumber;
+  std::size_t progressInterval = std::ceil( static_cast<double>(nSamples)/options.progressDivisor);
 
   //std::vector<funcPointer> updaters = getUpdaters();
   //funcPointer timeStep = getTimeStep();
@@ -43,12 +43,15 @@ void marqu::Runner::resultClear(){
   avgHistCompression.reset();
   avgMaxParticles.reset();
   avgRuntime.reset();
+  histObservables.clear();
   times.clear();
 }
 
 void marqu::Runner::resultInitialize(double T){
   if(options.saveParticleNumber) avgHistParticleNumber.emplace(options.nBins, 0);
+  if(options.saveParticleNumber) histParticleNumber.emplace(0, T, options.nBins);
   if(options.saveCompressionRate) avgHistCompression.emplace(options.nBins, 0);
+  if(options.saveCompressionRate) histCompression.emplace(0, T, options.nBins);
   if(options.saveMaxParticles) avgMaxParticles.emplace(0);
   if(options.saveRuntime) avgRuntime.emplace(0);
 
@@ -108,17 +111,20 @@ void marqu::Runner::resetSample(double T){
   floatParticleNumber = 1;
   observables = simulator.observableEstimate();
   nObservables = observables.size();
-  histObservables.clear();
-  for(std::size_t i = 0; i < nObservables; i++){
-    histObservables.emplace_back(0, T, options.nBins);
-  }
+  //histObservables.clear();
   if(avgHistObservables.empty()){
     for(std::size_t i = 0; i < nObservables; i++){
       avgHistObservables.emplace_back(options.nBins, 0);
+      histObservables.emplace_back(0, T, options.nBins);
     }
   }
-  if(options.saveParticleNumber) histParticleNumber.emplace(0, T, options.nBins); 
-  if(options.saveCompressionRate) histCompression.emplace(0, T, options.nBins); 
+  else{
+    for(auto & h : histObservables) h.clear();
+  }
+  //if(options.saveParticleNumber) histParticleNumber.emplace(0, T, options.nBins); 
+  if(options.saveParticleNumber) histParticleNumber->clear(); 
+  //if(options.saveCompressionRate) histCompression.emplace(0, T, options.nBins); 
+  if(options.saveCompressionRate) histCompression->clear(); 
 }
 
 void marqu::Runner::addSample(){
@@ -157,6 +163,7 @@ void marqu::Runner::printProgress(std::size_t count,
 
 void marqu::Runner::addAvgHist(std::vector<double> & target,
     const Histogram<double> & source){
+  //const std::vector<double> & avgHist = source.averagedWeights();
   std::vector<double> avgHist = source.averagedWeights();
   for (std::size_t i = 0; i < options.nBins; i++) {
     target[i] += avgHist[i];

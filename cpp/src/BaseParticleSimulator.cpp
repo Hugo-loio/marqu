@@ -6,6 +6,9 @@
 #include "BaseParticleSimulator.h"
 
 void marqu::BaseParticleSimulator::setInitialState(const std::string & orientations){
+  if(initConfig != nullptr){
+    delete initConfig;
+  }
   initConfig = new Configuration(orientations);
 }
 
@@ -26,11 +29,11 @@ double marqu::BaseParticleSimulator::eventRate(const Configuration & configurati
   double res = 0;
   for(std::size_t i = 0; i < model->siteCollection.size(); i++){
     for(const auto & sites : model->siteCollection[i]){
-      int row = configuration.subFlattened(sites);
-      auto & rowMinus = model->localMMinus[i][row];
-      auto & rowPlus = model->localMPlus[i][row];
-      if(! rowMinus.empty()) res += rowMinus.back().second;
-      if(! rowPlus.empty()) res += rowPlus.back().second;
+      int col = configuration.subFlattened(sites);
+      auto & colMinus = model->localMMinus[i][col];
+      auto & colPlus = model->localMPlus[i][col];
+      if(! colMinus.empty()) res += colMinus.back().second;
+      if(! colPlus.empty()) res += colPlus.back().second;
     }
   }
   return res;
@@ -45,32 +48,32 @@ std::pair<marqu::Configuration, marqu::Sign> marqu::BaseParticleSimulator::rando
   double rate = uni_dist(gen)*particle.eventRate;
   for(std::size_t i = 0; i < model->siteCollection.size(); i++){
     for(const auto & sites : model->siteCollection[i]){
-      int row = config.subFlattened(sites);
-      auto & rowMinus = model->localMMinus[i][row];
-      auto & rowPlus = model->localMPlus[i][row];
+      int col = config.subFlattened(sites);
+      auto & colMinus = model->localMMinus[i][col];
+      auto & colPlus = model->localMPlus[i][col];
 
-      if(!rowMinus.empty()){
-	if(rate <= rowMinus.back().second){
-	  for(const auto & transition : rowMinus){
+      if(!colMinus.empty()){
+	if(rate <= colMinus.back().second){
+	  for(const auto & transition : colMinus){
 	    if(rate <= transition.second){
 	      config.subSet(transition.first, sites);
 	      return std::make_pair(config, Sign::minus);
 	    }
 	  }
 	}
-	rate -= rowMinus.back().second;
+	rate -= colMinus.back().second;
       }
 
-      if(!rowPlus.empty()){
-	if(rate <= rowPlus.back().second){
-	  for(const auto & transition : rowPlus){
+      if(!colPlus.empty()){
+	if(rate <= colPlus.back().second){
+	  for(const auto & transition : colPlus){
 	    if(rate <= transition.second){
 	      config.subSet(transition.first, sites);
 	      return std::make_pair(config, Sign::plus);
 	    }
 	  }
 	}
-	rate -= rowPlus.back().second;
+	rate -= colPlus.back().second;
       }
     }
   }
@@ -127,11 +130,25 @@ int marqu::BaseParticleSimulator::initialize(int particleNumber, bool removeStat
 }
 
 void marqu::BaseParticleSimulator::setModel(const Model & model){
+  checkModel(model);
+  if(this->model != nullptr){
+    delete this->model;
+  }
   this->model = new Model(model);
 }
 
 void marqu::BaseParticleSimulator::setModel(Model && model){
+  checkModel(model);
+  if(this->model != nullptr){
+    delete this->model;
+  }
   this->model = new Model(std::move(model));
+}
+
+void marqu::BaseParticleSimulator::checkModel(const Model & model) const{
+  if(model.isClassical()){
+    std::cout << "The model is classical, consider switching for the ClassicalParticleSimulator to increase efficiency" << std::endl; 
+  }
 }
 
 void marqu::BaseParticleSimulator::updateObservable(const Particle & particle, bool add){

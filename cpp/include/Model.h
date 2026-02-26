@@ -9,8 +9,11 @@
 namespace marqu{
   // Output configuration, accumulated row escape rate
   using Transition = std::pair<marqu::Configuration, double>;
-  using TransitionRow = std::vector<Transition>; //Only non-zero elements
-  using RateMatrix = std::vector<TransitionRow>;
+  //using TransitionRow = std::vector<Transition>; //Only non-zero elements
+  //using RateMatrix = std::vector<TransitionRow>;
+
+  using TransitionCol = std::vector<Transition>; //Only non-zero elements
+  using RateMatrix = std::vector<TransitionCol>;
 
   using InteractionSites = std::vector<std::size_t>;
   using InteractionSitesGroup = std::vector<std::vector<std::size_t>>;
@@ -29,8 +32,8 @@ namespace marqu{
       // sites : Set of sites to apply the matrix
       void addRateMatrix(const std::string & name,
 	  const std::vector<std::vector<std::size_t>> & sites); 
-
       void clear();
+      bool isClassical() const {return classical;};
 
       //Groups of groups of sites with the same corresponding rate matrix
       std::vector<InteractionSitesGroup> siteCollection;
@@ -42,6 +45,8 @@ namespace marqu{
     protected:
       const std::size_t N;
       std::string basePath = "marqu_data/rate_matrix/";
+
+      bool classical = true;
 
     private:
       std::size_t findNSites(const std::string & name) const;
