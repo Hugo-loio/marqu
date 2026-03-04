@@ -40,15 +40,10 @@ namespace marqu{
       std::vector<double> times;
 
     protected:
-      using funcPointer = void (Runner::*)();
-
       void resultClear();
       void resultInitialize(double T);
       void resultRenormalize(std::size_t nSamples, 
 	  std::size_t nInitialParticles);
-
-      std::vector<funcPointer> getUpdaters();
-      funcPointer getTimeStep();
 
       void resetSample(double T);
       void addSample();

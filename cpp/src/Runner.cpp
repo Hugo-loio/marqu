@@ -11,9 +11,6 @@ void marqu::Runner::run(double T, std::size_t nSamples){
   std::size_t nInitialParticles = nSamples * options.initialParticleNumber;
   std::size_t progressInterval = std::ceil( static_cast<double>(nSamples)/options.progressDivisor);
 
-  //std::vector<funcPointer> updaters = getUpdaters();
-  //funcPointer timeStep = getTimeStep();
-
   for(std::size_t i = 1; i <= nSamples; i++){
     nInitialParticles += simulator.initialize(options.initialParticleNumber, 
 	options.removeStaticConfigs);
@@ -77,16 +74,6 @@ void marqu::Runner::resultRenormalize(std::size_t nSamples,
   if(options.saveRuntime) *avgRuntime *= norm;
 }
 
-std::vector<marqu::Runner::funcPointer> marqu::Runner::getUpdaters(){
-  std::vector<funcPointer> updaters;
-  updaters.push_back(& Runner::updateObservables);
-  if(options.saveParticleNumber) 
-    updaters.push_back(& Runner::updateParticleNumber);
-  if(options.saveCompressionRate) 
-    updaters.push_back(& Runner::updateCompressionRate);
-  if(options.saveMaxParticles) updaters.push_back(& Runner::updateMaxParticles);
-  return updaters;
-}
 
 void marqu::Runner::update(){
   updateObservables();
@@ -95,12 +82,6 @@ void marqu::Runner::update(){
   if(options.saveMaxParticles) updateMaxParticles();
 }
 
-marqu::Runner::funcPointer marqu::Runner::getTimeStep(){
-  funcPointer timeStep = nullptr;
-  if(options.stepMethod == 0) return & Runner::gillespieTimeStep;
-  else if(options.stepMethod == 1) return & Runner::discreteTimeStep;
-  else throw std::invalid_argument("Invalid time step method option");
-}
 
 void marqu::Runner::resetSample(double T){
   sampleStart = std::chrono::steady_clock::now();
