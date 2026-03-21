@@ -1,4 +1,5 @@
-from abc import ABC, abstractmethod
+from itertools import product
+from functools import reduce
 
 import numpy as np
 from scipy.optimize import minimize
@@ -6,14 +7,23 @@ import pandas as pd
 
 from .utils import *
 from .gauge_transform import *
-from .rate_matrix_terms import *
 from .operators import identity_pauli_projector_basis as id_basis
+from .operators import pauli_projector_basis
 
-class RateMatrix:
-    def __init__(self, nsites : int = 1):
+class GeneralizedRateMatrix:
+    def __init__(self, nsites : int, local_basis):
         self.nsites = nsites
-        self.M = np.zeros((6**nsites,6**nsites))
-        self.gauge = GaugeTransform(nsites)
+        basis = [reduce(np.kron, ops).flatten() for ops in 
+                 product(local_basis, repeat = nsites)]
+        # Change of basis matrix with basis operators as columns
+        self.A = np.column_stack(basis)
+        self.Adag = np.conj(self.A.T)
+        # Pseudo-inverse
+        self.Ainv = self.Adag @ np.linalg.inv(self.A @ self.Adag)
+        # Lindbladian (matrix form)
+        self.lind = np.zeros((4**nsites, 4**nsites), dtype = complex) 
+        self.M = np.zeros((len(basis),)*2, dtype = float)
+        self.gauge = GeneralizedGaugeTransform(self.A)
 
     def save(self, name):
         data_dir = check_data_dir()
@@ -24,35 +34,45 @@ class RateMatrix:
                    delimiter=',', fmt="%.8f")
         pd.Series(props).to_csv(path + "props.csv", header=False)
 
-    @abstractmethod
-    def add_hamiltonian(self, pauli : str, coupling : complex):
-        raise NotImplementedError
+    def add_hamiltonian(self, ham):
+        eye = np.eye(2**self.nsites)
+        self.lind += 1j * (np.kron(ham, eye) - np.kron(eye, ham.T))
+        self.M = self._computeM()
+
+    def add_noise(self, jump, rate : float):
+        eye = np.eye(2**self.nsites)
+        self.lind += rate * np.kron(np.conj(jump.T), jump.T) 
+        self.lind -= (rate/2) * np.kron(np.conj(jump.T) @ jump, eye) 
+        self.lind -= (rate/2) * np.kron(eye, jump.T @ np.conj(jump)) 
+        self.M = self._computeM()
+
+    def _computeM(self):
+        res = self.Ainv @ self.lind @ self.A
+        if(np.linalg.norm(res.imag) > 1E-10):
+            raise RuntimeError("Rate matrix not real")
+        return np.real(res).T
 
 
-class LocalRateMatrix(RateMatrix):
-    def __init__(self):
-        super().__init__(1)
-
-    def add_hamiltonian(self, pauli : str, coupling : complex):
-        self.M += local_hamiltonian_M(pauli_to_int(pauli), coupling)
-
-    def add_noise(self, a : NDArray[complex], b : complex, damping_rate : float):
-        self.M += damping_rate*local_noise_M(a,b)
-        
+class RateMatrix(GeneralizedRateMatrix):
+    def __init__(self, nsites : int = 1):
+        super().__init__(nsites, pauli_projector_basis(1))
 
 class IdentityLocalRateMatrix(RateMatrix):
     def __init__(self):
-        self.nsites = 1
+        super().__init__(1)
         self.M = np.zeros((7,7))
         self.gauge = IdentityPartialGaugeTransform()
 
-    def add_hamiltonian(self, pauli : str, coupling : complex):
-        mat = local_hamiltonian_M(pauli_to_int(pauli), coupling)
-        self.M[:-1,:-1] += mat
+    def add_hamiltonian(self, ham):
+        super().add_hamiltonian(ham)
+        self.M = np.pad(self.M, ((0,1), (0,1)))
         self.update_identity(mat)
 
-    def add_noise(self, a : NDArray[complex], b : complex, damping_rate : float):
-        self.M[:-1,:-1] += damping_rate*local_noise_M(a,b)
+    def add_noise(self, jump, rate : float):
+        beforeM = self.M
+        super().add_noise(jump, rate)
+        beforeM[:-1,:-1] = self.M
+        self.M = beforeM
 
     def update_identity(self, mat):
         for i in range(3):
@@ -61,66 +81,4 @@ class IdentityLocalRateMatrix(RateMatrix):
             self.gauge.fixed[2*i:2*i+2,-1] += val/2
             self.gauge.fixed[2*i:2*i+2,2*i:2*i+2] -= val/2
             self.gauge.fixed[-1,-1] -= val
-            #print(self.gauge.fixed)
-        #self.gauge.fixed[:] = 0
         self.gauge.set(np.zeros(self.gauge.dof))
-
-
-class PairwiseRateMatrix(RateMatrix):
-    def __init__(self):
-        super().__init__(2)
-
-    # Identity is a blank space in the pauli, ex: pauli = ' x'
-    def add_hamiltonian(self, pauli : str, coupling : complex):
-        if(pauli[0] == ' '):
-            pauli2 = pauli_to_int(pauli[1])
-            self.M += np.kron(np.eye(6), local_hamiltonian_M(pauli2, coupling))
-        elif(pauli[1] == ' '):
-            pauli1 = pauli_to_int(pauli[0])
-            self.M += np.kron(local_hamiltonian_M(pauli1, coupling), np.eye(6))
-        else:
-            pauli1 = pauli_to_int(pauli[0])
-            pauli2 = pauli_to_int(pauli[1])
-            self.M += pairwise_hamiltonian_M(pauli1, pauli2, coupling)
-
-    def add_local_noise(self, a : NDArray[complex], b : complex, damping_rate : float):
-        auxM = damping_rate*local_noise_M(a,b)
-        self.M += np.kron(np.eye(6), auxM)
-        self.M += np.kron(auxM, np.eye(6))
-    
-    def add_pauli_pair_noise(self, pauli : str, damping_rate : float):
-        pauli1 = pauli_to_int(pauli[0])
-        pauli2 = pauli_to_int(pauli[1])
-        self.M += damping_rate * pauli_pair_noise_M(pauli1, pauli2)
-
-
-'''
-class IdentityPairwiseRateMatrix(RateMatrix):
-    def __init__(self):
-        self.nsites = 2
-        self.gauge = GeneralizedGaugeTransform(2, id_basis)
-        self.M = np.zeros((self.gauge.dim,)*2)
-
-    # Identity is a blank space in the pauli, ex: pauli = ' x'
-    def add_hamiltonian(self, pauli : str, coupling : complex):
-        if(pauli[0] == ' '):
-            pauli2 = pauli_to_int(pauli[1])
-            self.M += np.kron(np.eye(6), local_hamiltonian_M(pauli2, coupling))
-        elif(pauli[1] == ' '):
-            pauli1 = pauli_to_int(pauli[0])
-            self.M += np.kron(local_hamiltonian_M(pauli1, coupling), np.eye(6))
-        else:
-            pauli1 = pauli_to_int(pauli[0])
-            pauli2 = pauli_to_int(pauli[1])
-            self.M += pairwise_hamiltonian_M(pauli1, pauli2, coupling)
-
-    def add_local_noise(self, a : NDArray[complex], b : complex, damping_rate : float):
-        auxM = damping_rate*local_noise_M(a,b)
-        self.M += np.kron(np.eye(6), auxM)
-        self.M += np.kron(auxM, np.eye(6))
-    
-    def add_pauli_pair_noise(self, pauli : str, damping_rate : float):
-        pauli1 = pauli_to_int(pauli[0])
-        pauli2 = pauli_to_int(pauli[1])
-        self.M += damping_rate * pauli_pair_noise_M(pauli1, pauli2)
-        '''

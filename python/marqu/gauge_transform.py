@@ -11,14 +11,10 @@ def sum_off_diag_negative(matrix):
     return - np.sum(negative_matrix) 
 
 class GeneralizedGaugeTransform:
-    def __init__(self, nsites : int, operator_basis):
-        self.nsites = nsites
-
-        op_basis = operator_basis(nsites)
-        A = np.column_stack([op.flatten() for op in op_basis])
+    def __init__(self, A):
         A = np.vstack([A.real, A.imag])
 
-        self.dim = len(op_basis)
+        self.dim = A.shape[1]
         self.basis = null_space(A)
         self.dof = (self.dim-1) * self.basis.shape[1]
         self.row_dof = self.basis.shape[1]
@@ -32,7 +28,9 @@ class GeneralizedGaugeTransform:
 
 class GaugeTransform(GeneralizedGaugeTransform):
     def __init__(self, nsites : int):
-        super().__init__(nsites, pauli_projector_basis)
+        op_basis = pauli_projector_basis(nsites)
+        A = np.column_stack([op.flatten() for op in op_basis])
+        super().__init__(A)
 
 # One site, extend to the identity configuration without applying a gauge
 class IdentityPartialGaugeTransform(GaugeTransform):

@@ -5,6 +5,8 @@ from numpy.typing import NDArray
 
 from .utils import *
 
+# This module is deprecated since 
+
 def flatten(axis, sign):
     return axis*2 + (1 - sign) // 2
 
@@ -35,6 +37,7 @@ def pairwise_hamiltonian_M(pauli1 : int, pauli2 : int, coupling : complex):
                                              pj2, sj2, pk2, sk2)
     return M
 
+# This is wrong
 def local_traceless_noise_M(a : NDArray[complex]):
     a = np.array(a, dtype = complex)
 
@@ -57,6 +60,7 @@ def local_traceless_noise_M(a : NDArray[complex]):
 
     return M
 
+# This is also wrong
 def local_noise_M(a : NDArray[complex], b : complex):
     M = local_traceless_noise_M(a)
 
