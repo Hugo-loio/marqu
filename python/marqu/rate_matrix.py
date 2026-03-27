@@ -30,9 +30,17 @@ class GeneralizedRateMatrix:
         rate_matrix_dir = check_dir(data_dir + "rate_matrix/")
         path = check_dir(rate_matrix_dir + name + "/")
         props = {'nsites' : self.nsites}
-        np.savetxt(path + "M.csv", self.M + self.gauge.Lambda, 
-                   delimiter=',', fmt="%.8f")
+        Mfinal = self.M + self.gauge.Lambda
+        np.savetxt(path + "M.csv", Mfinal, delimiter=',', fmt="%.8f")
         pd.Series(props).to_csv(path + "props.csv", header=False)
+
+        empty_rows = np.sum(np.abs(Mfinal), axis = 1) < 1E-9
+        empty_cols = np.sum(np.abs(Mfinal), axis = 0) < 1E-9
+        sinks = np.logical_and(empty_cols, np.logical_not(empty_rows))
+        if(np.any(sinks)):
+            print("Saved model with sink configurations")
+
+        #if(self.M + self.gauge.Lambda
 
     def add_hamiltonian(self, ham):
         eye = np.eye(2**self.nsites)
@@ -66,7 +74,7 @@ class IdentityLocalRateMatrix(RateMatrix):
     def add_hamiltonian(self, ham):
         super().add_hamiltonian(ham)
         self.M = np.pad(self.M, ((0,1), (0,1)))
-        self.update_identity(mat)
+        self.update_identity(self.M)
 
     def add_noise(self, jump, rate : float):
         beforeM = self.M

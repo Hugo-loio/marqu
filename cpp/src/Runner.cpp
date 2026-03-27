@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <iomanip>
+#include <iostream>
 
 void marqu::Runner::run(double T, std::size_t nSamples){
   resultClear();
@@ -17,15 +18,20 @@ void marqu::Runner::run(double T, std::size_t nSamples){
 
     resetSample(T);
 
-    while(t < T){
-      //for (auto updater : updaters) (this->*updater)(); 
-      update();
-      tPrevious = t;
-      timeStep();
-      //(this->*timeStep)();
+    try {
+      while(t < T){
+	update();
+	tPrevious = t;
+	timeStep();
+	//std::cout << std::setprecision(8) << " t = " << t << std::endl;
+	//simulator.displayParticles();
+      }
+    } catch (const std::runtime_error & e) {
+      if (std::string(e.what()) != "All particles are stationary") {
+	throw; // Re-throw unrelated runtime errors
+      }
     }
     t = T;
-    //for (auto updater : updaters) (this->*updater)(); 
     update();
 
     addSample();
