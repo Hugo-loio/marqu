@@ -58,8 +58,11 @@ def generate_uniform(noise):
     model.add_noise(np.kron(paulis[2], paulis[1]), b * noise)
     model.add_noise(np.kron(paulis[2], paulis[2]), c * noise)
 
+    # model.M holds the default rate matrix
+    # model.gauge.Lambda holds the current gauge transformation
+
     params, cost = lp_optimize(model)
-    model.gauge.set(params)
+    model.gauge.set(params) # Set a new gauge from the optimized params
     plot_mat(model.M + model.gauge.Lambda)
     #model.save(f"tfim_dim{dim:g}_J{J:g}_h{h:g}_noise{noise:g}")
 
