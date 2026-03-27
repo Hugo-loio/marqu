@@ -2,14 +2,18 @@ from itertools import product
 
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.optimize import brentq
 
 from marqu.rate_matrix import RateMatrix
 from marqu.gauge_optimizer import lp_optimize
-from marqu.operators import paulis
 
 # This is an example script that implements the noisy TFIM used in
 # TBA reference to our paper 
+
+paulis = np.array([
+    [[0,1],[1,0]],
+    [[0,-1j],[1j,0]],
+    [[1,0],[0,-1]]
+    ])
 
 def plot_mat(mat):
     plt.imshow(mat, aspect='auto') 
