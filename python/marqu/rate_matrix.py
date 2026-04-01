@@ -25,11 +25,17 @@ class GeneralizedRateMatrix:
         self.M = np.zeros((len(basis),)*2, dtype = float)
         self.gauge = GeneralizedGaugeTransform(self.A)
 
+    def sat_particle_number(self):
+        Maux = (self.M + self.gauge.Lambda)[~np.eye(self.M.shape[0], 
+                                                    dtype = bool)]
+        ratio = np.sum(np.abs(Maux[Maux < 0]))/np.sum(np.abs(Maux))
+        return -2 * np.log(1 - 0.5 * ratio)
+
     def save(self, name):
         data_dir = check_data_dir()
         rate_matrix_dir = check_dir(data_dir + "rate_matrix/")
         path = check_dir(rate_matrix_dir + name + "/")
-        props = {'nsites' : self.nsites}
+        props = {'nsites' : self.nsites, 'sat_pnumb' : self.sat_particle_number()}
         Mfinal = self.M + self.gauge.Lambda
         np.savetxt(path + "M.csv", Mfinal, delimiter=',', fmt="%.8f")
         pd.Series(props).to_csv(path + "props.csv", header=False)
