@@ -15,8 +15,7 @@ marqu::Particle::Particle(const marqu::Configuration & configuration, bool type,
 }
 
 bool marqu::operator==(const marqu::Particle & p1, const marqu::Particle & p2){
-  return (p1.configuration.flattened() == p2.configuration.flattened()) 
-    && (p1.type == p2.type);
+  return (p1.configuration == p2.configuration) && (p1.type == p2.type);
 }
 
 marqu::Particle marqu::opposite(const Particle & particle){

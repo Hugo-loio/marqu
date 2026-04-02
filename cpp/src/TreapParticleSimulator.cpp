@@ -4,7 +4,7 @@
 
 // TODO: Fix a lot of repeated tree search operations looking for the same node
 
-// This method wasn't properly tested, just use gillespie
+// This method isn't properly tested, just use gillespie
 void marqu::TreapParticleSimulator::discreteTimeStep(double dt){
   if(warnDiscrete){
     std::cout << "Warning: using discrete timesteps in the TreapParticleSimulator might be ineficient. The time step complexity is O(n' log n') as opposed to O(n) for VectorParticleSimulator, for n particles distributed by n' configurations" << std::endl;
@@ -44,10 +44,10 @@ void marqu::TreapParticleSimulator::addParticle(const Particle & particle){
   int res = add(root, particle);
   if(res == 1){
     Node *left, *right;
-    split(root, particle.configuration.flattened(), left, right);
+    split(root, particle.configuration, left, right);
     root = merge(merge(left, new Node(particle, int_dist(gen))), right);
   }
-  else if(res == 2) remove(root, particle.configuration.flattened());
+  else if(res == 2) remove(root, particle.configuration);
   trackAdd(particle); 
 }
 
@@ -55,15 +55,15 @@ void marqu::TreapParticleSimulator::addParticle(Particle && particle){
   int res = add(root, particle);
   if(res == 1){
     Node *left, *right;
-    split(root, particle.configuration.flattened(), left, right);
+    split(root, particle.configuration, left, right);
     root = merge(merge(left, new Node(std::move(particle), int_dist(gen))), right);
   }
-  else if(res == 2) remove(root, particle.configuration.flattened());
+  else if(res == 2) remove(root, particle.configuration);
   trackAdd(particle);
 }
 
 void marqu::TreapParticleSimulator::removeParticle(const Particle & particle){
-  if(remove(root, particle)) remove(root, particle.configuration.flattened());
+  if(remove(root, particle)) remove(root, particle.configuration);
   trackRemove(particle);
 }
 
@@ -81,7 +81,7 @@ void marqu::TreapParticleSimulator::moveParticle(const Particle & out, Particle 
 //void marqu::TreapParticleSimulator::markovStep(const Particle & particle){
 //  std::pair<Configuration, Sign> res = randomEvent(particle);
 //  bool type = (res.second == Sign::plus) ? particle.type : ! particle.type;
-//  Node * config = findConfig(root, res.first.flattened());
+//  Node * config = findConfig(root, res.first);
 //  double rate = config ? config->rate : eventRate(res.first);
 //
 //  Particle newParticle(std::move(res.first), type, rate);
@@ -91,7 +91,7 @@ void marqu::TreapParticleSimulator::moveParticle(const Particle & out, Particle 
 void marqu::TreapParticleSimulator::markovStep(const Particle & particle){
   std::pair<Configuration, Sign> res = randomEvent(particle);
   bool type = (res.second == Sign::plus) ? particle.type : ! particle.type;
-  Node * config = findConfig(root, res.first.flattened());
+  Node * config = findConfig(root, res.first);
   double rate = config ? config->rate : eventRate(res.first);
 
   Particle newParticle(std::move(res.first), type, rate);
@@ -129,9 +129,10 @@ void marqu::TreapParticleSimulator::recalc(Node* node){
 }
 
 // Node with config goes to the right tree
-void marqu::TreapParticleSimulator::split(Node * tree, int config, Node *& left, Node *& right) {
+void marqu::TreapParticleSimulator::split(Node * tree, 
+    const Configuration & config, Node *& left, Node *& right) {
   if(!tree) return void(left = right = nullptr);
-  if(config <= tree->configuration.flattened()){
+  if(config <= tree->configuration){
     split(tree->left, config, left, tree->left);
     right = tree;
   }
@@ -156,10 +157,11 @@ marqu::TreapParticleSimulator::Node * marqu::TreapParticleSimulator::merge(Node 
   }
 }
 
-marqu::TreapParticleSimulator::Node * marqu::TreapParticleSimulator::findConfig(Node * tree, int config){
+marqu::TreapParticleSimulator::Node * marqu::TreapParticleSimulator::findConfig(
+    Node * tree, const Configuration & config){
   if(!tree) return nullptr;
-  if(tree->configuration.flattened() == config) return tree;
-  else if(config < tree->configuration.flattened()){
+  if(tree->configuration == config) return tree;
+  else if(config < tree->configuration){
     return findConfig(tree->left, config);
   }
   else{
@@ -167,22 +169,31 @@ marqu::TreapParticleSimulator::Node * marqu::TreapParticleSimulator::findConfig(
   }
 }
 
-void marqu::TreapParticleSimulator::remove(Node *& tree, int config){
-  Node * left, * rm, * right;
-  split(tree, config, left, right);
-  split(right, config + 1, rm, right); 
-  delete rm;
-  tree = merge(left, right);
+void marqu::TreapParticleSimulator::remove(Node *& tree, 
+    const Configuration & config){
+  if (!tree) return; 
+  if (tree->configuration == config) {
+    Node * rm = tree;
+    tree = merge(tree->left, tree->right);
+    delete rm;
+  } 
+  else if (config < tree->configuration) {
+    remove(tree->left, config);
+  } 
+  else {
+    remove(tree->right, config);
+  }
+  recalc(tree); 
 }
 
 bool marqu::TreapParticleSimulator::remove(Node * tree, const Particle & particle){
   bool emptyNode = false;
   if(!tree) throw std::runtime_error("Removing a particle that doesn't exist");
-  if(tree->configuration.flattened() == particle.configuration.flattened()){
+  if(tree->configuration == particle.configuration){
     particle.type ? tree->nParticles-- : tree->nAntiParticles--;
     if(tree->nParticles == 0 && tree->nAntiParticles == 0) emptyNode = true;
   }
-  else if(particle.configuration.flattened() < tree->configuration.flattened()){
+  else if(particle.configuration < tree->configuration){
     emptyNode = remove(tree->left, particle);
   }
   else{
@@ -195,7 +206,7 @@ bool marqu::TreapParticleSimulator::remove(Node * tree, const Particle & particl
 int marqu::TreapParticleSimulator::add(Node * tree, const Particle & particle){
   int returnVal = 0;
   if(!tree) return 1;
-  if(tree->configuration.flattened() == particle.configuration.flattened()){
+  if(tree->configuration == particle.configuration){
     particle.type ? tree->nParticles++ : tree->nAntiParticles++;
     if(annihilateParticles){
       int nAnnihilate = std::min(tree->nParticles, tree->nAntiParticles);
@@ -207,7 +218,7 @@ int marqu::TreapParticleSimulator::add(Node * tree, const Particle & particle){
       }
     }
   }
-  else if(particle.configuration.flattened() < tree->configuration.flattened()){
+  else if(particle.configuration < tree->configuration){
     returnVal = add(tree->left, particle);
   }
   else{

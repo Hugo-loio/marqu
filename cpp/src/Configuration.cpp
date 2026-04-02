@@ -43,6 +43,10 @@ int marqu::toInt(Sign sign, Axis axis){
   return static_cast<int>(sign) + 2*static_cast<int>(axis);
 }
 
+int marqu::toInt(const std::pair<Sign, Axis> & orientation){
+  return toInt(orientation.first, orientation.second);
+}
+
 int marqu::leviCivita(Axis a1, Axis a2, Axis a3){
   if(a1 == a2 || a2 == a3 || a3 == a1) return 0;
   if( (a1 == Axis::x && a2 == Axis::y && a3 == Axis::z) ||
@@ -116,6 +120,42 @@ marqu::Configuration::~Configuration(){
   delete[] orientations;
 }
 
+bool marqu::Configuration::operator==(const Configuration & other) const {
+  if (N != other.N) return false;
+  for (int i = 0; i < N; ++i) {
+    if (orientations[i].first != other.orientations[i].first || 
+        orientations[i].second != other.orientations[i].second) {
+      return false;
+    }
+  }
+  return true;
+}
+
+bool marqu::Configuration::operator<(const Configuration & other) const {
+  if (N != other.N) return N < other.N;
+  for (int i = 0; i < N; ++i) {
+    int thisVal = toInt(orientations[i]);
+    int otherVal = toInt(other.orientations[i]);
+    if (thisVal != otherVal) {
+      return thisVal < otherVal;
+    }
+  }
+  return false;
+}
+
+bool marqu::Configuration::operator<=(const Configuration & other) const {
+  if (N != other.N) return N < other.N;
+  for (int i = 0; i < N; ++i) {
+    int thisVal = toInt(orientations[i]);
+    int otherVal = toInt(other.orientations[i]);
+    
+    if (thisVal != otherVal) {
+      return thisVal < otherVal;
+    }
+  }
+  return true; 
+}
+
 void marqu::Configuration::set(const std::string & orientations){
   for(int i = 0; i < N; ++i){
     this->orientations[i].first = toSign(orientations[2*i]);
@@ -163,7 +203,7 @@ int marqu::Configuration::subFlattened(const std::vector<std::size_t> & sites) c
   int res = 0;
   int multiplier = 1;
   for(int i : sites){
-    res += multiplier * toInt(orientations[i].first, orientations[i].second);
+    res += multiplier * toInt(orientations[i]);
     multiplier *= 6;
     //std::cout << "site " << i << " " << res << std::endl;
   }

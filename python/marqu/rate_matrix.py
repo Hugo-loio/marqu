@@ -29,7 +29,7 @@ class GeneralizedRateMatrix:
         Maux = (self.M + self.gauge.Lambda)[~np.eye(self.M.shape[0], 
                                                     dtype = bool)]
         ratio = np.sum(np.abs(Maux[Maux < 0]))/np.sum(np.abs(Maux))
-        return -2 * np.log(1 - 0.5 * ratio)
+        return -2 * np.log(1 - ratio)
 
     def save(self, name):
         data_dir = check_data_dir()

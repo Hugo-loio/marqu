@@ -15,6 +15,7 @@ namespace marqu{
   Sign toSign(char sign);
   char toChar(Sign sign);
   int toInt(Sign sign, Axis axis);
+  int toInt(const std::pair<Sign, Axis> & orientation);
 
   int leviCivita(Axis, Axis, Axis);
 
@@ -47,9 +48,13 @@ namespace marqu{
       Configuration(Configuration && other) noexcept; 
       Configuration & operator=(const Configuration & other);
       Configuration & operator=(Configuration&& other) noexcept;
+      ~Configuration();
+
+      bool operator==(const Configuration & other) const;
+      bool operator<(const Configuration & other) const;
+      bool operator<=(const Configuration & other) const;
       const std::pair<Sign, Axis> & operator[](std::size_t index) const{
 	return orientations[index];};
-      ~Configuration();
 
       void set(const std::string & orientations);
       void set(const std::pair<Sign, Axis> * orientations); 
@@ -67,7 +72,7 @@ namespace marqu{
       void updateConfiguration();
 
       int N; //Number of spins
-      int configuration; //Flattened configuration index
+      int configuration; //Flattened configuration index, might overflow!
       std::pair<Sign, Axis> * orientations;
   }; 
 

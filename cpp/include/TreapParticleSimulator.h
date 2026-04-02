@@ -55,10 +55,11 @@ namespace marqu{
       int getCumulParticles(Node * node){return node ? node->cumulParticles : 0;}
       double getCumulRate(Node * node){return node ? node->cumulRate : 0.0;}
       void recalc(Node * node); 
-      void split(Node * tree, int config, Node *& left, Node *& right); 
+      void split(Node * tree, const Configuration & config, 
+	  Node *& left, Node *& right); 
       Node * merge(Node * left, Node * right);
-      Node * findConfig(Node * tree, int config);
-      void remove(Node *& tree, int config);
+      Node * findConfig(Node * tree, const Configuration & config);
+      void remove(Node *& tree, const Configuration & config);
       // Returns true if the node gets cleared
       bool remove(Node * tree, const Particle &); 
       // Returns 0: added particle, 1: config not found, 2: cleared node 
