@@ -31,11 +31,20 @@ class GeneralizedRateMatrix:
         ratio = np.sum(np.abs(Maux[Maux < 0]))/np.sum(np.abs(Maux))
         return -2 * np.log(1 - ratio)
 
+    def creation_rate(self):
+        Maux = (self.M + self.gauge.Lambda)[~np.eye(self.M.shape[0], 
+                                                    dtype = bool)]
+        return (2/self.M.shape[0]) * np.sum(np.abs(Maux[Maux < 0]))
+
     def save(self, name):
         data_dir = check_data_dir()
         rate_matrix_dir = check_dir(data_dir + "rate_matrix/")
         path = check_dir(rate_matrix_dir + name + "/")
-        props = {'nsites' : self.nsites, 'sat_pnumb' : self.sat_particle_number()}
+        props = {
+                'nsites' : self.nsites, 
+                'sat_pnumb' : self.sat_particle_number(),
+                'cr_rate' : self.creation_rate()
+                }
         Mfinal = self.M + self.gauge.Lambda
         np.savetxt(path + "M.csv", Mfinal, delimiter=',', fmt="%.8f")
         pd.Series(props).to_csv(path + "props.csv", header=False)
