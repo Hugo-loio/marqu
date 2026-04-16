@@ -4,21 +4,21 @@
 #include <iomanip>
 
 #include "BaseParticleSimulator.h"
-
-void marqu::BaseParticleSimulator::setInitialState(const std::string & orientations){
-  if(initConfig != nullptr){
-    delete initConfig;
-  }
-  initConfig = new Configuration(orientations);
-}
+#include "ProductStateSampler.h"
 
 marqu::BaseParticleSimulator::~BaseParticleSimulator(){
-  if(initConfig != nullptr){
-    delete initConfig;
-  }
   if(model != nullptr){
     delete model;
   }
+}
+
+void marqu::BaseParticleSimulator::setInitialState(const std::string & orientations){
+  initStateSampler = std::make_unique<ProductStateSampler>(orientations);
+}
+
+void marqu::BaseParticleSimulator::setInitialStateSampler(
+    const BaseStateSampler & sampler){
+  initStateSampler = sampler.clone();
 }
 
 double marqu::BaseParticleSimulator::eventRate(const Configuration & configuration) const {
@@ -37,6 +37,36 @@ double marqu::BaseParticleSimulator::eventRate(const Configuration & configurati
     }
   }
   return res;
+}
+
+int marqu::BaseParticleSimulator::initialize(int particleNumber, bool removeStatic){
+  clearParticles();
+  observableTracker = std::vector<double>(getObservableCount(), 0.0);
+  observableBuffer = std::vector<double>(getObservableCount(), 0.0);
+
+  if(!initStateSampler){
+    throw std::runtime_error("Initial state sampler not set");
+  }
+  int nStatic = 0;
+
+  for(int i = 0; i < particleNumber; ++i){
+    Configuration config = initStateSampler->sample(gen);
+    Particle particle(config, true, eventRate(config));
+
+    // Do not accept particles with no dynamics
+    if(removeStatic and particle.eventRate < 1e-9){
+      updateObservable(particle, true);
+      nStatic++;
+      --i;
+    }
+    else{
+      addParticle(particle);
+    }
+  }
+
+  initParticleNumber = particleNumber + nStatic;
+
+  return nStatic;
 }
 
 std::pair<marqu::Configuration, marqu::Sign> marqu::BaseParticleSimulator::randomEvent(const Particle & particle){
@@ -78,55 +108,8 @@ std::pair<marqu::Configuration, marqu::Sign> marqu::BaseParticleSimulator::rando
     }
   }
 
+  std::cout << std::setprecision(8) << rate << " " << particle.eventRate << std::endl;
   throw std::runtime_error("Rate accumulator exceeded total event rate");
-}
-
-int marqu::BaseParticleSimulator::initialize(int particleNumber, bool removeStatic){
-  clearParticles();
-  observableTracker = std::vector<double>(getObservableCount(), 0.0);
-  observableBuffer = std::vector<double>(getObservableCount(), 0.0);
-
-  if(initConfig == nullptr){
-    throw std::runtime_error("Cannot initialize the simulator without setting the initial state!");
-  }
-  int N = initConfig->getN();
-  int nStatic = 0;
-  std::bernoulli_distribution bool_dist(0.5);
-
-  for(int i = 0; i < particleNumber; ++i){
-    std::pair<Sign, Axis> * orientations = new std::pair<Sign, Axis>[N];
-    for (int j = 0; j < N; ++j) {
-      if(uni_dist(gen) < (1.0/3)){
-	orientations[j] = std::make_pair(initConfig->sign(j), initConfig->axis(j));
-      }
-      else{
-	Sign sign = static_cast<Sign>(bool_dist(gen));
-	Axis axis = static_cast<Axis>(
-	    (static_cast<int>(initConfig->axis(j)) + bool_dist(gen) + 1) % 3
-	    );
-	orientations[j] = std::make_pair(sign, axis);
-      }
-    }
-
-    Configuration config(orientations, N);
-    Particle particle(config, true, eventRate(config));
-
-    // Do not accept particles with no dynamics
-    if(removeStatic and particle.eventRate < 1e-9){
-      updateObservable(particle, true);
-      nStatic++;
-      --i;
-    }
-    else{
-      addParticle(particle);
-    }
-
-    delete[] orientations;
-  }
-
-  initParticleNumber = particleNumber + nStatic;
-
-  return nStatic;
 }
 
 void marqu::BaseParticleSimulator::setModel(const Model & model){

@@ -4,10 +4,12 @@
 #include <vector>
 #include <random>
 #include <string>
+#include <memory>
 
 #include "Configuration.h"
 #include "Particle.h"
 #include "Model.h"
+#include "BaseStateSampler.h"
 
 namespace marqu{
   class BaseParticleSimulator{
@@ -31,6 +33,7 @@ namespace marqu{
 
       // Only product states are supported for now
       void setInitialState(const std::string & orientations); 
+      void setInitialStateSampler(const BaseStateSampler & sampler);
       virtual int initialize(int particleNumber = 1, bool removeStatic = true); 
 
       void setModel(const Model & model);
@@ -66,7 +69,8 @@ namespace marqu{
       std::mt19937 gen;
       std::uniform_real_distribution<double> uni_dist = std::uniform_real_distribution<double>(0,1); 
 
-      Configuration * initConfig = nullptr;
+      std::unique_ptr<BaseStateSampler> initStateSampler;
+      //Configuration * initConfig = nullptr;
       Model * model = nullptr;
   };
 }
