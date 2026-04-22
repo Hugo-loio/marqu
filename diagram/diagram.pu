@@ -1,35 +1,94 @@
 @startuml
 
+
 !theme mytheme
 
-skinparam dpi 600
+scale 3
+''skinparam dpi 300
 
-package "<color:ccc>MarQu</color>" {
+package "<color:ccc>CPP</color>" as CppPackage{
 
 
   abstract class BaseParticleSimulator{
-  + virtual void initialize() = 0
-  # virtual double eventRate(int configuration) = 0
-  # virtual double totalRate() = 0
+  + virtual std::size_t getObservableCount() const = 0;
+  + virtual void observables(const Configuration &, std::vector<double> & out) = 0;
+  + void setInitialStateSampler(const BaseStateSampler &);
+  + void setModel(const Model & model);
 }
 
-class VectorParticleSimulator {
-  # virtual void markovStep(int index) = 0;
+class TreapParticleSimulator {
 }
 
-class ListParticleSimulator {
-  # virtual void markovStep(std::list<int>::iterator) = 0;
+class ClassicalParticleSimulator {
 }
 
-BaseParticleSimulator <|-- VectorParticleSimulator
-BaseParticleSimulator <|-- ListParticleSimulator
-
-
-'legend center
-'  | Color | Type |
-'  |<#$BOXBG>| Done |
-'  |<#yellow>| TODO |
-'endlegend
+abstract class BaseStateSampler {
 }
+
+class BellPairStateSampler {
+}
+
+class ProductStateSampler {
+}
+
+class Model{
+  + Model(std::size_t N);
+  + void addRateMatrix(const std::string & name,
+  const std::vector<std::vector<std::size_t>> & sites); 
+}
+
+class Runner{
+  + Runner(BaseParticleSimulator & sim); 
+  + void run(double T, std::size_t nSamples);
+}
+
+BaseParticleSimulator <|-- TreapParticleSimulator
+BaseParticleSimulator <|-- ClassicalParticleSimulator
+BaseParticleSimulator o-- BaseStateSampler
+BaseParticleSimulator o-- Model
+
+Runner o-- BaseParticleSimulator
+
+BaseStateSampler <|-- BellPairStateSampler
+BaseStateSampler <|-- ProductStateSampler
+
+}
+
+package "<color:ccc>Python</color>" as PythonPackage{
+  class GeneralizedRateMatrix {
+    + add_hamiltonian(ham)
+    + add_noise(jump, rate)
+  }
+
+  class RateMatrix {
+    + nsites : int
+  }
+
+  class GeneralizedGaugeTransform {
+    + set(parameters)
+  }
+
+  class GaugeTransform {
+  }
+
+  class lp_optimize << (F, #FF7700) >> {
+    (RateMatrix) -> optimal_p, cost_func
+  }
+
+  GeneralizedRateMatrix <|-- RateMatrix
+  GeneralizedGaugeTransform <|-- GaugeTransform
+
+  GeneralizedRateMatrix *-- GeneralizedGaugeTransform 
+
+  lp_optimize ..> GeneralizedRateMatrix
+}
+
+legend bottom
+  | **Symbol** | **Relation Type** | **Meaning** |
+  | ◁-- | Inheritance | Child inherits from Parent |
+  | ◇-- | Aggregation | Uses but does not strictly own the memory lifecycle |
+  | ◆-- | Composition | Tightly coupled, owns the memory lifecycle |
+  | <-- | Dependency  | A function or class relies on another temporarily |
+endlegend
 
 @enduml

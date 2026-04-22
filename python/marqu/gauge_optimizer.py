@@ -1,9 +1,9 @@
 import numpy as np
 from scipy.optimize import linprog
 
-from .rate_matrix import RateMatrix
+from .rate_matrix import GeneralizedRateMatrix
 
-def lp_optimize(rate_matrix : RateMatrix):
+def lp_optimize(rate_matrix : GeneralizedRateMatrix):
     # Constraints Ax <= b, x = [p, t]^T, b = M, A = [-basis -I]
     # Bounds t >= 0
     # Objective function J = sum t 

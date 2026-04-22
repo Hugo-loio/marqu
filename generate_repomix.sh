@@ -1,3 +1,3 @@
 #!/bin/sh
 
-npx repomix --ignore "**/build/**,**/archive/**,**/__pycache__/**,diagram/**,LICENSE,*.sh,README.md,examples/**,.gitignore"
+npx repomix --ignore "**/build/**,**/archive/**,**/__pycache__/**,LICENSE,*.sh,**.gitignore,**.png,**.svg,**/data/**,**/marqu_data/**"
