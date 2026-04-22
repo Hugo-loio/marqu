@@ -1,0 +1,184 @@
+Compiling main ...
+g++ -std=c++17 -I/home/hugo/.local/include -O3  main.cpp tfim.cpp -L/home/hugo/.local/lib -lmarqu -o main
+In file included from main.cpp:8:
+tfim.h:13:23: error: expected ‘)’ before ‘N’
+   13 |       TFIM(std::size_t N, std::size_t dim, double J,
+      |           ~           ^~
+      |                       )
+tfim.h:16:19: error: ‘virtual std::size_t models::<unnamed class>::getObservableCount() const’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   16 |       std::size_t getObservableCount() const {return 6;};
+      |                   ^~~~~~~~~~~~~~~~~~
+tfim.h:17:12: error: ‘virtual void models::<unnamed class>::observables(const marqu::Configuration&, std::vector<double>&)’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   17 |       void observables(const marqu::Configuration &, std::vector<double> & out);
+      |            ^~~~~~~~~~~
+tfim.h:20:19: error: ‘std::size_t models::<unnamed class>::N’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   20 |       std::size_t N;  // Size length
+      |                   ^
+tfim.h:21:19: error: ‘std::size_t models::<unnamed class>::dim’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   21 |       std::size_t dim; // Dimensions
+      |                   ^~~
+tfim.h:22:19: error: ‘std::size_t models::<unnamed class>::nsites’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   22 |       std::size_t nsites; // Total spins
+      |                   ^~~~~~
+tfim.h:23:14: error: ‘double models::<unnamed class>::J’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   23 |       double J;
+      |              ^
+tfim.h:24:14: error: ‘double models::<unnamed class>::h’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   24 |       double h;
+      |              ^
+tfim.h:25:14: error: ‘double models::<unnamed class>::noise’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   25 |       double noise; //Damping rate
+      |              ^~~~~
+tfim.h:26:56: error: ‘std::vector<std::pair<long unsigned int, long unsigned int> > models::<unnamed class>::pairs’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   26 |       std::vector<std::pair<std::size_t, std::size_t>> pairs;
+      |                                                        ^~~~~
+tfim.h:27:43: error: ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_short’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   27 |       std::unique_ptr<marqu::PauliString> yx_short;
+      |                                           ^~~~~~~~
+tfim.h:28:43: error: ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_short’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   28 |       std::unique_ptr<marqu::PauliString> yy_short;
+      |                                           ^~~~~~~~
+tfim.h:29:43: error: ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_long’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   29 |       std::unique_ptr<marqu::PauliString> yx_long;
+      |                                           ^~~~~~~
+tfim.h:30:43: error: ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_long’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   30 |       std::unique_ptr<marqu::PauliString> yy_long;
+      |                                           ^~~~~~~
+tfim.h:32:19: error: ‘marqu::Axis models::<unnamed class>::x’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   32 |       marqu::Axis x = marqu::Axis::x;
+      |                   ^
+tfim.h:33:19: error: ‘marqu::Axis models::<unnamed class>::y’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   33 |       marqu::Axis y = marqu::Axis::y;
+      |                   ^
+tfim.h:11:13: error: anonymous struct with base classes
+   11 |   class TFIM: public marqu::TreapParticleSimulator{
+      |             ^
+tfim.h:11:13: error: member ‘marqu::TreapParticleSimulator models::<unnamed class>::marqu::TreapParticleSimulator’ with constructor not allowed in anonymous aggregate
+tfim.h:11:13: error: member ‘marqu::TreapParticleSimulator models::<unnamed class>::marqu::TreapParticleSimulator’ with destructor not allowed in anonymous aggregate
+tfim.h:11:13: error: member ‘marqu::TreapParticleSimulator models::<unnamed class>::marqu::TreapParticleSimulator’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:26:56: error: member ‘std::vector<std::pair<long unsigned int, long unsigned int> > models::<unnamed class>::pairs’ with constructor not allowed in anonymous aggregate
+   26 |       std::vector<std::pair<std::size_t, std::size_t>> pairs;
+      |                                                        ^~~~~
+tfim.h:26:56: error: member ‘std::vector<std::pair<long unsigned int, long unsigned int> > models::<unnamed class>::pairs’ with destructor not allowed in anonymous aggregate
+tfim.h:26:56: error: member ‘std::vector<std::pair<long unsigned int, long unsigned int> > models::<unnamed class>::pairs’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:27:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_short’ with constructor not allowed in anonymous aggregate
+   27 |       std::unique_ptr<marqu::PauliString> yx_short;
+      |                                           ^~~~~~~~
+tfim.h:27:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_short’ with destructor not allowed in anonymous aggregate
+tfim.h:27:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_short’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:28:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_short’ with constructor not allowed in anonymous aggregate
+   28 |       std::unique_ptr<marqu::PauliString> yy_short;
+      |                                           ^~~~~~~~
+tfim.h:28:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_short’ with destructor not allowed in anonymous aggregate
+tfim.h:28:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_short’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:29:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_long’ with constructor not allowed in anonymous aggregate
+   29 |       std::unique_ptr<marqu::PauliString> yx_long;
+      |                                           ^~~~~~~
+tfim.h:29:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_long’ with destructor not allowed in anonymous aggregate
+tfim.h:29:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_long’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:30:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_long’ with constructor not allowed in anonymous aggregate
+   30 |       std::unique_ptr<marqu::PauliString> yy_long;
+      |                                           ^~~~~~~
+tfim.h:30:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_long’ with destructor not allowed in anonymous aggregate
+tfim.h:30:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_long’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:34:4: error: abstract declarator ‘models::<unnamed class>’ used as declaration
+   34 |   };
+      |    ^
+main.cpp: In function ‘int main(int, char**)’:
+main.cpp:26:16: error: ‘simulator’ is not a member of ‘models’
+   26 |   models::TFIM simulator(N, dim, J, h, noise);
+      |                ^~~~~~~~~
+main.cpp:27:24: error: ‘simulator’ was not declared in this scope
+   27 |   marqu::Runner runner(simulator);
+      |                        ^~~~~~~~~
+In file included from tfim.cpp:8:
+tfim.h:13:23: error: expected ‘)’ before ‘N’
+   13 |       TFIM(std::size_t N, std::size_t dim, double J,
+      |           ~           ^~
+      |                       )
+tfim.h:16:19: error: ‘virtual std::size_t models::<unnamed class>::getObservableCount() const’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   16 |       std::size_t getObservableCount() const {return 6;};
+      |                   ^~~~~~~~~~~~~~~~~~
+tfim.h:17:12: error: ‘virtual void models::<unnamed class>::observables(const marqu::Configuration&, std::vector<double>&)’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   17 |       void observables(const marqu::Configuration &, std::vector<double> & out);
+      |            ^~~~~~~~~~~
+tfim.h:20:19: error: ‘std::size_t models::<unnamed class>::N’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   20 |       std::size_t N;  // Size length
+      |                   ^
+tfim.h:21:19: error: ‘std::size_t models::<unnamed class>::dim’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   21 |       std::size_t dim; // Dimensions
+      |                   ^~~
+tfim.h:22:19: error: ‘std::size_t models::<unnamed class>::nsites’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   22 |       std::size_t nsites; // Total spins
+      |                   ^~~~~~
+tfim.h:23:14: error: ‘double models::<unnamed class>::J’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   23 |       double J;
+      |              ^
+tfim.h:24:14: error: ‘double models::<unnamed class>::h’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   24 |       double h;
+      |              ^
+tfim.h:25:14: error: ‘double models::<unnamed class>::noise’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   25 |       double noise; //Damping rate
+      |              ^~~~~
+tfim.h:26:56: error: ‘std::vector<std::pair<long unsigned int, long unsigned int> > models::<unnamed class>::pairs’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   26 |       std::vector<std::pair<std::size_t, std::size_t>> pairs;
+      |                                                        ^~~~~
+tfim.h:27:43: error: ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_short’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   27 |       std::unique_ptr<marqu::PauliString> yx_short;
+      |                                           ^~~~~~~~
+tfim.h:28:43: error: ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_short’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   28 |       std::unique_ptr<marqu::PauliString> yy_short;
+      |                                           ^~~~~~~~
+tfim.h:29:43: error: ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_long’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   29 |       std::unique_ptr<marqu::PauliString> yx_long;
+      |                                           ^~~~~~~
+tfim.h:30:43: error: ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_long’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   30 |       std::unique_ptr<marqu::PauliString> yy_long;
+      |                                           ^~~~~~~
+tfim.h:32:19: error: ‘marqu::Axis models::<unnamed class>::x’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   32 |       marqu::Axis x = marqu::Axis::x;
+      |                   ^
+tfim.h:33:19: error: ‘marqu::Axis models::<unnamed class>::y’ invalid; an anonymous struct may only have public non-static data members [-fpermissive]
+   33 |       marqu::Axis y = marqu::Axis::y;
+      |                   ^
+tfim.h:11:13: error: anonymous struct with base classes
+   11 |   class TFIM: public marqu::TreapParticleSimulator{
+      |             ^
+tfim.h:11:13: error: member ‘marqu::TreapParticleSimulator models::<unnamed class>::marqu::TreapParticleSimulator’ with constructor not allowed in anonymous aggregate
+tfim.h:11:13: error: member ‘marqu::TreapParticleSimulator models::<unnamed class>::marqu::TreapParticleSimulator’ with destructor not allowed in anonymous aggregate
+tfim.h:11:13: error: member ‘marqu::TreapParticleSimulator models::<unnamed class>::marqu::TreapParticleSimulator’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:26:56: error: member ‘std::vector<std::pair<long unsigned int, long unsigned int> > models::<unnamed class>::pairs’ with constructor not allowed in anonymous aggregate
+   26 |       std::vector<std::pair<std::size_t, std::size_t>> pairs;
+      |                                                        ^~~~~
+tfim.h:26:56: error: member ‘std::vector<std::pair<long unsigned int, long unsigned int> > models::<unnamed class>::pairs’ with destructor not allowed in anonymous aggregate
+tfim.h:26:56: error: member ‘std::vector<std::pair<long unsigned int, long unsigned int> > models::<unnamed class>::pairs’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:27:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_short’ with constructor not allowed in anonymous aggregate
+   27 |       std::unique_ptr<marqu::PauliString> yx_short;
+      |                                           ^~~~~~~~
+tfim.h:27:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_short’ with destructor not allowed in anonymous aggregate
+tfim.h:27:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_short’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:28:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_short’ with constructor not allowed in anonymous aggregate
+   28 |       std::unique_ptr<marqu::PauliString> yy_short;
+      |                                           ^~~~~~~~
+tfim.h:28:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_short’ with destructor not allowed in anonymous aggregate
+tfim.h:28:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_short’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:29:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_long’ with constructor not allowed in anonymous aggregate
+   29 |       std::unique_ptr<marqu::PauliString> yx_long;
+      |                                           ^~~~~~~
+tfim.h:29:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_long’ with destructor not allowed in anonymous aggregate
+tfim.h:29:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yx_long’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:30:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_long’ with constructor not allowed in anonymous aggregate
+   30 |       std::unique_ptr<marqu::PauliString> yy_long;
+      |                                           ^~~~~~~
+tfim.h:30:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_long’ with destructor not allowed in anonymous aggregate
+tfim.h:30:43: error: member ‘std::unique_ptr<marqu::PauliString> models::<unnamed class>::yy_long’ with copy assignment operator not allowed in anonymous aggregate
+tfim.h:34:4: error: abstract declarator ‘models::<unnamed class>’ used as declaration
+   34 |   };
+      |    ^
+tfim.cpp:10:13: error: expected unqualified-id before ‘::’ token
+   10 | models::TFIM::TFIM(std::size_t N, std::size_t dim, double J, double h,
+      |             ^~
+tfim.cpp:52:18: error: expected unqualified-id before ‘::’ token
+   52 | void models::TFIM::observables(
+      |                  ^~
+make: *** [Makefile:11: main] Error 1

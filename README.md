@@ -21,12 +21,39 @@ Uses a dynamic Treap (Tree + Heap) data structure to maintain efficient O(log N)
     * `ClassicalParticleSimulator`: Optimized simulator for regimes where sufficient noise has driven the system into a purely classical state (all positive rates).
 * **Initial State Sampling:** Built-in support for sampling Product States and volume-law entangled non-local Bell Pair states.
 
-## User guide
+## Install guide
 
 Install with `./install.sh` and uninstall with `./unistall.sh`.
 
-Examples on how to use the package provided in the `examples` directory.
-
 ## Architecture Diagrams
 
-To help you understand the high-level design of MarQu, we provide class diagrams in the `diagrams/` directory written in [PlantUML](https://plantuml.com/), which outline the primary user-facing APIs for both the CPP and Python packages.
+Below is the high-level design of MarQu outlining the primary user-facing APIs for both the C++ simulation engine and the Python preprocessing package. 
+
+*(PlantUML source available in the `diagram/` directory).*
+
+![MarQu Architecture Diagram](diagram/diagram.svg)
+
+## Example
+
+The `examples` directory contains a fully functional pipeline simulating a 2D Transverse-Field Ising Model (TFIM) subjected to depolarizing noise. It demonstrates how to initialize highly entangled states and track the decay of quantum correlations.
+
+To run the full pipeline, simply navigate to the `examples` directory and execute the bash script:
+` ` `bash
+cd examples
+./run.sh
+` ` `
+
+### What happens under the hood?
+
+1. **Setting up the Grid (`generate_pairs.py`):**
+   First, the script generates a set of disjoint site pairs on a 2D grid. These pairs will be used to initialize the system in a highly non-trivial, volume-law entangled state composed of Bell pairs.
+
+2. **Optimizing the Quantum Dynamics (`tfim.py`):**
+   Using the `marqu` Python library, the script defines the local Hamiltonian (TFIM) and Lindbladian noise channels. It then runs the `lp_optimize` linear programming solver to find the optimal gauge transformation that minimizes negative transition rates. The optimized transition matrices are exported to the `marqu_data/rate_matrix` directory.
+
+3. **Running the Monte Carlo Simulation (`tfim.cpp` & `main.cpp`):**
+   The C++ engine compiles and takes over. It loads the optimized rate matrices and uses the `TreapParticleSimulator` to evolve the state of the system over time using the Gillespie algorithm. 
+
+4. **Tracking Observables:**
+   During the simulation, the engine continuously estimates specific Pauli strings. Specifically, it calculates the connected two-point correlations (both short-range and long-range) between the initially entangled Bell pairs, outputting their decay as the simulation progresses.
+

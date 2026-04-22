@@ -1,3 +1,4 @@
+import sys
 from itertools import product
 
 import numpy as np
@@ -8,9 +9,10 @@ from marqu.rate_matrix import RateMatrix
 from marqu.gauge_optimizer import lp_optimize
 from marqu.operators import  paulis
 
-dim = 2
-h = 1
-J = 0.5
+dim = int(sys.argv[1])
+J = float(sys.argv[2])
+h = float(sys.argv[3])
+gamma = float(sys.argv[4])
 
 def local_expand(op, nsites):
     res = np.zeros(np.array(op.shape) * (1 << (nsites-1)), dtype = complex)
@@ -49,7 +51,5 @@ def generate_uniform(gamma):
 
     print("gamma = ", gamma, ", cost = ", cost)
 
-
-for gamma in np.linspace(0, 1, 21):
-    generate_uniform(gamma)
+generate_uniform(gamma)
 
