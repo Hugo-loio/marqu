@@ -38,10 +38,10 @@ Below is the high-level design of MarQu outlining the primary user-facing APIs f
 The `examples` directory contains a fully functional pipeline simulating a 2D Transverse-Field Ising Model (TFIM) subjected to depolarizing noise. It demonstrates how to initialize highly entangled states and track the decay of quantum correlations.
 
 To run the full pipeline, simply navigate to the `examples` directory and execute the bash script:
-` ` `bash
+```bash
 cd examples
 ./run.sh
-` ` `
+```
 
 ### What happens under the hood?
 
