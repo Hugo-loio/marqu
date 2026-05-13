@@ -4,7 +4,9 @@ A library for simulating the Schrödinger equation of spin chains based on a cla
 
 Details of the underlying mathematical formulation and algorithm implementation can be found in:
 
-**TBA**
+**H Lóio, J De Nardis, T Jin,
+"Quantum-to-Classical Computability Transition via Negative Markov Chains",
+[arXiv:2604.19889](https://doi.org/10.48550/arXiv.2604.19889)**
 
 If you use this code in your research please cite the work above.
 
