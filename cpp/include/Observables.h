@@ -1,3 +1,6 @@
+#ifndef OBSERVABLES_H
+#define OBSERVABLES_H
+
 #include "Configuration.h"
 
 namespace marqu{
@@ -20,3 +23,5 @@ namespace marqu{
 
   double magnetization(Axis, const Configuration &);
 }
+
+#endif
