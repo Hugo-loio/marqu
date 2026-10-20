@@ -9,7 +9,7 @@ namespace marqu{
   class TreapParticleSimulator : public BaseParticleSimulator{
     public:
       TreapParticleSimulator() : int_dist(1, INT32_MAX) {};
-      ~TreapParticleSimulator() {clear(root);};
+      virtual ~TreapParticleSimulator() {clear(root);};
 
       void discreteTimeStep(double dt);
       double gillespieTimeStep();

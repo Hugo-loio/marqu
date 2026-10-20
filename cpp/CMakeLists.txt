@@ -4,6 +4,7 @@ project(MarQu)
 set(CMAKE_CXX_STANDARD 17)
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g -fno-omit-frame-pointer")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Add library
 file(GLOB sources ${PROJECT_SOURCE_DIR}/src/*.cpp)
