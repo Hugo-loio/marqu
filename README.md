@@ -6,7 +6,7 @@ Details of the underlying mathematical formulation and algorithm implementation 
 
 **H Lóio, J De Nardis, T Jin,
 "Quantum-to-Classical Computability Transition via Negative Markov Chains",
-[arXiv:2604.19889](https://doi.org/10.48550/arXiv.2604.19889)**
+[arXiv:2604.19889](https://doi.org/10.48550/arXiv.2604.19889) (2026)**
 
 If you use this code in your research please cite the work above.
 
