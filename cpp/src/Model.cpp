@@ -40,6 +40,36 @@ std::size_t marqu::Model::findNSites(const std::string & name) const{
 
 }
 
+double marqu::Model::findCrRate(const std::string & name) const{
+  std::string filename = basePath + name + "/props.csv";
+  std::ifstream file(filename);
+  if (!file.is_open()){
+    throw std::runtime_error("Could not open file: " + filename);
+  }
+
+  std::string line;
+  while (std::getline(file, line)) {
+    std::stringstream ss(line);
+    std::string key, val;
+
+    if (!std::getline(ss, key, ',')) continue;
+
+    if (key == "cr_rate") {
+      if (!std::getline(ss, val, ',')) {
+	throw std::runtime_error("Missing value for key: " + key);
+      }
+
+      try {
+	return std::stod(val);
+      } catch (...) {
+	throw std::runtime_error("Invalid float for value: " + val);
+      }
+    }
+  }
+
+  throw std::runtime_error("cr_rate not found");
+}
+
 void marqu::Model::checkSites(const std::vector<std::vector<std::size_t>> & sites) const{
   for(const std::vector<std::size_t> & group : sites){
     for(std::size_t site : group){
